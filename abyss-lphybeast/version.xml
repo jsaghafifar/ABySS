@@ -1,0 +1,10 @@
+<package name='abyss-lphybeast' version='0.0.1'>
+
+
+    <!-- add BEAST2 service below  -->
+
+    <service type="lphybeast.spi.LPhyBEASTExt">
+        <provider classname="abyss.lphybeast.spi.ABySSLBExtImpl"/>
+    </service>
+
+</package>
