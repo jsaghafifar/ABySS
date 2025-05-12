@@ -24,7 +24,7 @@ public class ABySSImpl extends LPhyBaseImpl {
 
     @Override
     public List<Class<? extends GenerativeDistribution>> declareDistributions() {
-        return Arrays.asList( );
+        return Arrays.asList(ConnectedGraphBinomial.class);
     }
 
     @Override
