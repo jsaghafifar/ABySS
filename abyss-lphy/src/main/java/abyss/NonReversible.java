@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 public class NonReversible extends RateMatrix {
 
-    protected static final String indicatorsParamName = "indicators";
+    public static final String indicatorsParamName = "indicators";
     protected static final String ratesParamName = SubstModelParamNames.RatesParamName;
     protected static final String freqParamName = SubstModelParamNames.FreqParamName;
 
