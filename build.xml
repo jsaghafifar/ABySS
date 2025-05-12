@@ -5,7 +5,7 @@
     <property name="root" location="abyss-beast"/>
     <property name="src" location="${root}/src/main/java"/>
     <property name="test" location="${root}/src/test/java"/>
-    <property name="lib" location="${root}/lib"/>
+<!--    <property name="lib" location="${root}/lib"/>-->
 
     <!-- Location to check for local copy of beast2 repository -->
     <property name="local-beast-source-root" location="../beast2"/>
@@ -52,7 +52,7 @@
 
         <!-- Read package name and version from xml file -->
         <xmlproperty file="${root}/version.xml" prefix="fromVersionFile" />
-        <property name="projName" value="abyss-beast" />
+        <property name="projName" value="ABySS" />
         <property name="projVersion" value="${fromVersionFile.package(version)}" />
 
         <mkdir dir="${build}"/>
@@ -288,16 +288,16 @@
 
         <jar jarfile="${pack}/${fullName}.src.jar" basedir="${src}" />
 
-        <mkdir dir="${lib}" />
+        <mkdir dir="${root}/lib" />
         <copy todir="${pack}/lib">
-            <fileset dir="${lib}" includes="*.jar" />
+            <fileset dir="${root}/lib" includes="${fullName}.jar" />
         </copy>
         <jar jarfile="${pack}/lib/${fullName}.jar" basedir="${build}" />
 
         <copy file="README.md" tofile="${pack}/README" />
 <!--        <copy file="COPYING" todir="${pack}" />-->
         <copy todir="${pack}">
-            <fileset dir="${lib}" includes="LICENSE*" />
+            <fileset dir="${root}/lib" includes="LICENSE*" />
         </copy>
 
         <mkdir dir="${examples}" />
