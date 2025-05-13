@@ -6,7 +6,7 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>abyss-lphy-studio</artifactId>
+    <artifactId>abyss-studio</artifactId>
 
     <dependencies>
         <dependency>

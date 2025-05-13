@@ -27,7 +27,7 @@
         <module>abyss-lphy</module>
         <module>abyss-beast</module>
         <module>abyss-lphybeast</module>
-        <module>abyss-lphy-studio</module>
+        <module>abyss-studio</module>
     </modules>
 
     <build>
