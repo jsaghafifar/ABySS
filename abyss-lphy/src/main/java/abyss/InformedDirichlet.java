@@ -17,28 +17,19 @@ import java.util.TreeMap;
  */
 public class InformedDirichlet extends ParametricDistribution<Double[]> {
 
-    private Value<Number[]> inf;
-    public static final String infParamName = "information";
+    private Value<Number[]> in;
+    public static final String rfInputsParamName = "rfInputs";
     private Value<Number> omega;
     public static final String omegaParamName = "omega";
-    private Value<Number> mean;
-    private static final String meanParamName = "mean";
-
 
     public InformedDirichlet(
-            @ParameterInfo(name=infParamName, narrativeName = "information",
-                    description="informing concentration.") Value<Number[]> inf,
-            @ParameterInfo(name=omegaParamName, narrativeName = "omega", description = "scale factor") Value<Number> omega,
-            @ParameterInfo(name = meanParamName,
-                    description = "The expected mean per element. By default, the sampled values sum to 1.",
-                    optional = true) Value<Number> mean)
-             {
+            @ParameterInfo(name= rfInputsParamName, narrativeName = "rfInputs",
+                    description="input rates/freqs informing concentration.") Value<Number[]> in,
+            @ParameterInfo(name=omegaParamName, narrativeName = "omega",
+                    description = "scale factor") Value<Number> omega) {
         super();
-        this.inf = inf;
+        this.in = in;
         this.omega = omega;
-        if (mean != null) {
-            this.mean = mean;
-        } else this.mean = new Value<>(null,1.0);
 
     }
 
@@ -49,35 +40,31 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
             category = GeneratorCategory.PRIOR,
             description="The informed dirichlet probability distribution.")
     public RandomVariable<Double[]> sample() {
-
-        double mean = getMean().value().doubleValue(); // means and omega fits where?
-        double omega = getOmega().value().doubleValue();
-        Double[] dirichlet = new Double[inf.value().length];
+        Double[] conc = normaliseConcentration();
+        Double[] dirichlet = new Double[conc.length];
         double sum = 0.0;
-        for (int i = 0; i < dirichlet.length; i++) {
-            double val = MathUtils.randomGamma(inf.value()[i].doubleValue(), 1.0, random); // should (*omega) be here? instead
-            dirichlet[i] = val * omega;
-            sum += val;
+
+        for (int i = 0; i < conc.length; i++) {
+            dirichlet[i] = MathUtils.randomGamma(conc[i], 1.0, random);
+            sum += dirichlet[i];
         }
 
+        // dirichlet normalised to sum to 1
         for (int i = 0; i < dirichlet.length; i++) {
-                dirichlet[i] /= sum; // (* mean) here?
-            }
-
+            dirichlet[i] /= sum;
+        }
 
         return new RandomVariable<>("x", dirichlet, this);
     }
 
     public double density(Double[] d) {
-        Number[] infVal = getInf().value();
-        Double[] alpha = (Double[]) infVal;
+        Double[] alpha = normaliseConcentration();
         if (alpha.length != d.length) {
             throw new IllegalArgumentException("Dimensions don't match");
         }
 
         double sumAlpha = 0.0;
         for (Double a: alpha){
-            a *= omega.value().doubleValue(); // scale
             sumAlpha += a;
         }
 
@@ -90,21 +77,21 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
         double gammaSumAlpha = org.apache.commons.math3.special.Gamma.gamma(sumAlpha);
         // calc ∏ Gamma(alpha_i)
         double gammaAlphaProd = 1.0;
-        for (Number a : alpha) {
-            gammaAlphaProd *= org.apache.commons.math3.special.Gamma.gamma(a.doubleValue());
+        for (Double a : alpha) {
+            gammaAlphaProd *= org.apache.commons.math3.special.Gamma.gamma(a);
         }
 
         //∏ d_i^(alpha_i - 1)
         double dProd = 1.0;
         for (int i = 0; i < d.length; i++) {
             double x = d[i];
-            Number a = alpha[i];
+            Double a = alpha[i];
 
             if (x <= 1e-15) {
                 return 0.0;
             }
 
-            dProd *= Math.pow(x / sumD, a.doubleValue() - 1);
+            dProd *= Math.pow(x / sumD, a - 1);
         }
 
         // check scaling factor
@@ -117,31 +104,42 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
     @Override
     public Map<String,Value> getParams() {
         return new TreeMap<>() {{
-            if (inf!= null) put(infParamName, inf);
+            if (in != null) put(rfInputsParamName, in);
             if (omega != null) put(omegaParamName, omega);
-            if (mean != null) put(meanParamName, mean);
         }};
     }
 
     @Override
     public void setParam(String paramName, Value value) {
-        if (paramName.equals(infParamName)) inf = value;
+        if (paramName.equals(rfInputsParamName)) in = value;
         else if (paramName.equals(omegaParamName)) omega = value;
-        else if (paramName.equals(meanParamName)) mean = value;
         else throw new RuntimeException("Unrecognised parameter name: " + paramName);
 
         super.setParam(paramName, value); // constructDistribution
     }
 
-    public Value<Number[]> getInf() {
-        return inf;
+    public Value<Number[]> getRFInputs() {
+        return in;
     }
 
     public Value<Number> getOmega() {
         return omega;
     }
 
-    public Value<Number> getMean() {
-        return mean;
+    protected Double[] normaliseConcentration() {
+        Double[] conc = (Double[]) in.value();
+        double sum = 0.0;
+        for (int i = 0; i < conc.length; i++) {
+            sum += conc[i];
+        }
+
+        double omega = getOmega().value().doubleValue();
+
+        // conc normalised and scaled to sum to omega
+        for (int i = 0; i < conc.length; i++) {
+            conc[i] /= sum;
+            conc[i] *= omega;
+        }
+        return conc;
     }
 }
