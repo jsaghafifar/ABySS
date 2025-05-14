@@ -24,12 +24,12 @@ public class ABySSImpl extends LPhyBaseImpl {
 
     @Override
     public List<Class<? extends GenerativeDistribution>> declareDistributions() {
-        return Arrays.asList(ConnectedGraphBinomial.class);
+        return Arrays.asList(InformedDirichlet.class);
     }
 
     @Override
     public List<Class<? extends BasicFunction>> declareFunctions() {
-        return Arrays.asList(NonReversible.class, NQPFAM.class);
+        return Arrays.asList(NonReversible.class, NQPFAM.class, NQPFAMRates.class, NQPFAMFreqs.class);
     }
 
     public String getExtensionName() {
