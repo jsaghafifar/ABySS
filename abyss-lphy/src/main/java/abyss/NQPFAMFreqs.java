@@ -16,7 +16,7 @@ public class NQPFAMFreqs<U> extends DeterministicFunction<U[]> {
 
     public NQPFAMFreqs() {}
 
-    @GeneratorInfo(name = "nqpfamRates", description = "")
+    @GeneratorInfo(name = "nqpfamFreqs", description = "")
     public Value<U[]> apply() {
         NQPFAM nqpfam = new NQPFAM(null);
         U[] array = (U[]) nqpfam.getFreq();
