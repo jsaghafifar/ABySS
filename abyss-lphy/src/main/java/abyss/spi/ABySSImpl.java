@@ -24,7 +24,7 @@ public class ABySSImpl extends LPhyBaseImpl {
 
     @Override
     public List<Class<? extends GenerativeDistribution>> declareDistributions() {
-        return Arrays.asList(ConnectedGraphSVS.class, InformedDirichlet.class);
+        return Arrays.asList(ConnectedSVS.class, InformedDirichlet.class);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package abyss;
 
 import lphy.base.distribution.ParametricDistribution;
-import lphy.base.distribution.RandomBooleanArray;
 import lphy.base.evolution.substitutionmodel.SubstModelParamNames;
 import lphy.core.logger.LoggerUtils;
 import lphy.core.model.RandomVariable;
@@ -9,7 +8,6 @@ import lphy.core.model.Value;
 import lphy.core.model.annotation.GeneratorCategory;
 import lphy.core.model.annotation.GeneratorInfo;
 import lphy.core.model.annotation.ParameterInfo;
-import lphy.core.model.datatype.IntegerValue;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
@@ -17,73 +15,69 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- *
+ * A rate-informed Bernoulli distribution
+ * for obtaining connected SVS rate indicators
+ * @author jsaghafifar
  */
-public class ConnectedGraphSVS extends ParametricDistribution<Boolean[]> {
+public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
     private Value<Double[]> rates;
-    private Value<Double> k;
-    private Value<Integer> numStates;
+    private Value<Number> k;
 
     private static final int MAX_TRIES = 10000;
+    private double[] p;
 
     public static final String ratesParamName = SubstModelParamNames.RatesParamName;
     public static final String scaleParamName = "scale";
-    public static final String numStatesParamName = "numStates";
 
-    private final int NUM_RATES;
-
-    public ConnectedGraphSVS(@ParameterInfo(name = ratesParamName, narrativeName = "rates", description = "") Value<Double[]> rates,
-                             @ParameterInfo(name = scaleParamName, narrativeName = "scale", description = "") Value<Double> k,
-                             @ParameterInfo(name = numStatesParamName, narrativeName = "numStates", description = "") Value<Integer> numStates) {
+    public ConnectedSVS(@ParameterInfo(name = ratesParamName, narrativeName = "rates", description = "normalised nonreversible rate matrix") Value<Double[]> rates,
+                        @ParameterInfo(name = scaleParamName, narrativeName = "scale", description = "indicators' sensitivity to rates") Value<Number> k) {
         super();
         this.rates = rates;
         this.k = k;
-        this.numStates = numStates;
-        this.NUM_RATES = numStates.value() * numStates.value() - numStates.value();
 
         constructDistribution(random);
     }
 
     @Override
-    protected void constructDistribution(RandomGenerator random) {
-        //TODO
-    }
+    protected void constructDistribution(RandomGenerator random) { }
 
-    @GeneratorInfo(name = "ConnectedSVS", verbClause = "has", narrativeName = "distribution prior",
+    @GeneratorInfo(name = "ConnectedSVS", verbClause = "has", narrativeName = "Bernoulli distribution prior",
             category = GeneratorCategory.PRIOR,
-            description = "")
+            description = "rate-informed Bernoulli distribution with checks to ensure connected graphs for SVS rate matrices")
     public RandomVariable<Boolean[]> sample() {
-        double k = getScale().value();
+        double k = getScale().value().doubleValue();
         Double[] r = getRates().value();
-        int n = getNumStates().value();
+        double sum = 0;
+        for (int i = 0; i < r.length; i++) {
+            sum += r[i];
+        }
+        if (Math.abs(sum - 1.0) > 1e-6) throw new IllegalArgumentException("Rates must be normalised to sum to 1.");
 
-        Boolean[] b = new Boolean[NUM_RATES];
+        int n;
+        double root = (-1 - Math.sqrt(1+4*r.length))/2;
+        if (root % 1 == 0) {
+            n = (int) Math.abs(root);
+        } else throw new IllegalArgumentException(
+                "Wrong number of rates. Must be such that n(n-1) (n = number of states). " +
+                        "e.g. 4 nucleotide states = 12 rates.");
+
+        Boolean[] b = new Boolean[r.length];
         boolean connectedGraph = false;
         int iter = 0;
 
+        p = new double[r.length];
+        for (int i = 0; i < p.length; i++) {
+            double x = Math.log(p.length * r[i]);
+            x *= -k; // scaled
+            p[i] = 1/(1 + FastMath.exp(x));
+        }
         while (!connectedGraph) {
-            double[] p = new double[NUM_RATES];
-            double probSum = 0.0;
             for (int i = 0; i < p.length; i++) {
-                double probability = 1/(1+Math.exp(-k * Math.log(r[i]))); //TODO fix
-                if (probability == Double.NEGATIVE_INFINITY) {
-                    p[i] = 0.0F;
-                } else p[i] = FastMath.exp(probability);
-                probSum += p[i];
+                double U = random.nextDouble();
+                if (p[i] > U) {
+                    b[i] = Boolean.TRUE;
+                } else b[i] = Boolean.FALSE;
             }
-            double U = random.nextDouble() * probSum;
-            probSum = 0.0;
-            int index = 0;
-            for (int i = 0; i < p.length; i++) {
-                probSum += p[i];
-                if (probSum > U) {
-                    index = i;
-                    break;
-                }
-            }
-            RandomBooleanArray randomBooleanArray = new RandomBooleanArray(
-                    new Value<>(null,NUM_RATES), new IntegerValue(index, null));
-            b = randomBooleanArray.sample().value();
 
             boolean rowTest = false;
             boolean colTest = false;
@@ -110,22 +104,23 @@ public class ConnectedGraphSVS extends ParametricDistribution<Boolean[]> {
             }
             if (rowTest && colTest) connectedGraph = true;
             iter++;
-            if (!connectedGraph && iter % (MAX_TRIES/10)==0 && iter < MAX_TRIES) {
-                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider increasing "+
-                        ".");
+            if (!connectedGraph && iter % (MAX_TRIES)==0 && iter < MAX_TRIES) {
+                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider resampling rates.");
             }
             if (!connectedGraph && iter >= MAX_TRIES) {
-                LoggerUtils.log.severe("Max iterations exceeded! Try increasing " +
-                        " to keep graph connected.");
+                LoggerUtils.log.severe("Max iterations exceeded! Try resampling rates to keep the graph connected.");
                 throw new RuntimeException("Max iterations exceeded.");
             }
         }
         return new RandomVariable<>(null, b, this);
     }
 
-    public double logDensity(Boolean[] successes) {
-        //TODO
-        throw new UnsupportedOperationException("TODO");
+    public double logDensity(Boolean[] successes) { //TODO
+        double logP = 0.0;
+        for (int i = 0; i < successes.length; i++) {
+            logP += successes[i] ? Math.log(p[i]) : Math.log(1-p[i]);
+        }
+        return logP;
     }
 
     @Override
@@ -133,7 +128,6 @@ public class ConnectedGraphSVS extends ParametricDistribution<Boolean[]> {
         return new TreeMap<>() {{
             put(ratesParamName, rates);
             put(scaleParamName, k);
-            put(numStatesParamName, numStates);
         }};
     }
 
@@ -146,9 +140,6 @@ public class ConnectedGraphSVS extends ParametricDistribution<Boolean[]> {
             case scaleParamName:
                 k = value;
                 break;
-            case numStatesParamName:
-                numStates = value;
-                break;
             default:
                 throw new RuntimeException("Unrecognised parameter name: " + paramName);
         }
@@ -160,12 +151,8 @@ public class ConnectedGraphSVS extends ParametricDistribution<Boolean[]> {
         return getParams().get(ratesParamName);
     }
 
-    public Value<Double> getScale() {
+    public Value<Number> getScale() {
         return getParams().get(scaleParamName);
-    }
-
-    public Value<Integer> getNumStates() {
-        return getParams().get(numStatesParamName);
     }
 
 
