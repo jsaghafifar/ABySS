@@ -2,6 +2,7 @@ package abyss;
 
 import lphy.base.distribution.ParametricDistribution;
 import lphy.base.math.MathUtils;
+import lphy.core.logger.LoggerUtils;
 import lphy.core.model.RandomVariable;
 import lphy.core.model.Value;
 import lphy.core.model.annotation.GeneratorCategory;
@@ -17,18 +18,18 @@ import java.util.TreeMap;
  */
 public class InformedDirichlet extends ParametricDistribution<Double[]> {
 
-    private Value<Number[]> in;
-    public static final String rfInputsParamName = "rfInputs";
+    private Value<Number[]> conc;
+    public static final String concParamName = "conc";
     private Value<Number> omega;
-    public static final String omegaParamName = "omega";
+    public static final String scaleParamName = "scale";
 
     public InformedDirichlet(
-            @ParameterInfo(name= rfInputsParamName, narrativeName = "rfInputs",
-                    description="input rates/freqs informing concentration.") Value<Number[]> in,
-            @ParameterInfo(name=omegaParamName, narrativeName = "omega",
+            @ParameterInfo(name= concParamName, narrativeName = "conc",
+                    description="input rates/freqs informing concentration.") Value<Number[]> conc,
+            @ParameterInfo(name= scaleParamName, narrativeName = "scale",
                     description = "scale factor") Value<Number> omega) {
         super();
-        this.in = in;
+        this.conc = conc;
         this.omega = omega;
 
     }
@@ -40,12 +41,12 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
             category = GeneratorCategory.PRIOR,
             description="The informed dirichlet probability distribution.")
     public RandomVariable<Double[]> sample() {
-        Double[] conc = normaliseConcentration();
-        Double[] dirichlet = new Double[conc.length];
+        Double[] normConc = normaliseConcentration(conc);
+        Double[] dirichlet = new Double[normConc.length];
         double sum = 0.0;
 
-        for (int i = 0; i < conc.length; i++) {
-            dirichlet[i] = MathUtils.randomGamma(conc[i], 1.0, random);
+        for (int i = 0; i < normConc.length; i++) {
+            dirichlet[i] = MathUtils.randomGamma(normConc[i], 1.0, random);
             sum += dirichlet[i];
         }
 
@@ -54,11 +55,19 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
             dirichlet[i] /= sum;
         }
 
+        int x = 0;
+        for (int i = 0; i < dirichlet.length; i++) {
+            if (dirichlet[i] < 1e-6) x++;
+            if (x > dirichlet.length/10) throw new IllegalArgumentException("At least one dirichlet close to zero, increase " +
+                        scaleParamName +" ("+ omega +").");
+
+        }
+
         return new RandomVariable<>("x", dirichlet, this);
     }
 
     public double density(Double[] d) {
-        Double[] alpha = normaliseConcentration();
+        Double[] alpha = normaliseConcentration(conc);
         if (alpha.length != d.length) {
             throw new IllegalArgumentException("Dimensions don't match");
         }
@@ -104,42 +113,50 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
     @Override
     public Map<String,Value> getParams() {
         return new TreeMap<>() {{
-            if (in != null) put(rfInputsParamName, in);
-            if (omega != null) put(omegaParamName, omega);
+            if (conc != null) put(concParamName, conc);
+            if (omega != null) put(scaleParamName, omega);
         }};
     }
 
     @Override
     public void setParam(String paramName, Value value) {
-        if (paramName.equals(rfInputsParamName)) in = value;
-        else if (paramName.equals(omegaParamName)) omega = value;
+        if (paramName.equals(concParamName)) conc = value;
+        else if (paramName.equals(scaleParamName)) omega = value;
         else throw new RuntimeException("Unrecognised parameter name: " + paramName);
 
         super.setParam(paramName, value); // constructDistribution
     }
 
-    public Value<Number[]> getRFInputs() {
-        return in;
+    public Value<Number[]> getConc() {
+        return conc;
     }
 
-    public Value<Number> getOmega() {
+    public Value<Number> getScale() {
         return omega;
     }
 
-    protected Double[] normaliseConcentration() {
-        Double[] conc = (Double[]) in.value();
+    protected Double[] normaliseConcentration(Value<Number[]> conc) {
+        Double[] normConc = (Double[]) this.conc.value();
         double sum = 0.0;
-        for (int i = 0; i < conc.length; i++) {
-            sum += conc[i];
+        for (int i = 0; i < normConc.length; i++) {
+            sum += normConc[i];
         }
 
-        double omega = getOmega().value().doubleValue();
+        double omega = getScale().value().doubleValue();
+        double finalSum = 0.0;
 
         // conc normalised and scaled to sum to omega
-        for (int i = 0; i < conc.length; i++) {
-            conc[i] /= sum;
-            conc[i] *= omega;
+        for (int i = 0; i < normConc.length; i++) {
+            normConc[i] /= sum;
+            normConc[i] *= omega * normConc.length;
+            finalSum += normConc[i];
         }
-        return conc;
+        if (Math.abs(finalSum - omega*normConc.length) > 1e-6) throw new IllegalArgumentException("Conc must be normalised to sum to "+ scaleParamName + "*numRates = "+omega*normConc.length+".");
+        int x = 0;
+        for (int i = 0; i < normConc.length; i++) {
+            if (normConc[i] < 1.0) x++;
+            if (x > normConc.length/10) LoggerUtils.log.warning("At least one concentration is less than 1 after scaling. Consider increasing "+ scaleParamName + " by "+(double)Math.round(1/normConc[i] * 100d) / 100d+ " times to avoid zeroed rates.");
+        }
+        return normConc;
     }
 }
