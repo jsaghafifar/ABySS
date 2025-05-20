@@ -21,6 +21,7 @@ import java.util.TreeMap;
  */
 public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
     private Value<Double[]> rates;
+    private Value<Number> a;
     private Value<Number> k;
 
     private static final int MAX_TRIES = 10000;
@@ -28,12 +29,24 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
 
     public static final String ratesParamName = SubstModelParamNames.RatesParamName;
     public static final String scaleParamName = "scale";
+    public static final String shapeParamName = "shape";
 
-    public ConnectedSVS(@ParameterInfo(name = ratesParamName, narrativeName = "rates", description = "normalised nonreversible rate matrix") Value<Double[]> rates,
-                        @ParameterInfo(name = scaleParamName, narrativeName = "scale", description = "indicators' sensitivity to rates") Value<Number> k) {
+    public ConnectedSVS(@ParameterInfo(name = ratesParamName, narrativeName = "rates", description = "normalised nonreversible empirical rate matrix") Value<Double[]> rates,
+                        @ParameterInfo(name = scaleParamName, narrativeName = "scale", description = "scale of active rates, default 1", optional=true) Value<Number> a,
+                        @ParameterInfo(name = shapeParamName, narrativeName = "shape", description = "indicators' sensitivity to rates, default 1", optional=true) Value<Number> k) {
         super();
         this.rates = rates;
-        this.k = k;
+        if (a != null) {
+            if (a.value().doubleValue() > 0) {
+                this.a = a;
+            } else throw new IllegalArgumentException(scaleParamName+" must be > 0.");
+        } else this.a = new Value(1.0,null);
+
+        if (k != null) {
+            if (k.value().doubleValue() > 0) {
+                this.k = k;
+            } else throw new IllegalArgumentException(shapeParamName+" must be > 0.");
+        } else this.k = new Value(1.0,null);
 
         constructDistribution(random);
     }
@@ -45,7 +58,8 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
             category = GeneratorCategory.PRIOR,
             description = "rate-informed Bernoulli distribution with checks to ensure connected graphs for SVS rate matrices")
     public RandomVariable<Boolean[]> sample() {
-        double k = getScale().value().doubleValue();
+        double a = getScale().value().doubleValue();
+        double k = getShape().value().doubleValue();
         Double[] r = getRates().value();
         double sum = 0;
         for (int i = 0; i < r.length; i++) {
@@ -69,43 +83,52 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
         for (int i = 0; i < p.length; i++) {
             double x = Math.log(p.length * r[i]);
             x *= -k; // scaled
-            p[i] = 1/(1 + FastMath.exp(x));
+            p[i] = a/(a + FastMath.exp(x));
         }
         while (!connectedGraph) {
+            int successes = 0;
             for (int i = 0; i < p.length; i++) {
                 double U = random.nextDouble();
                 if (p[i] > U) {
                     b[i] = Boolean.TRUE;
+                    successes++;
                 } else b[i] = Boolean.FALSE;
             }
 
-            boolean rowTest = false;
-            boolean colTest = false;
-            for (int i = 0; i < n; i++) {
-                rowTest = false;
-
-                for (int j = 0; j < (n-1); j++) {
-                    if (b[i * (n-1) + j]) {
-                        rowTest = true;
-                        break;
-                    }
-                }
-                if (!rowTest) break;
-            }
-            for (int j = 0; j < (n-1); j++) {
-                colTest = false;
+            if (successes >= n) {
+                boolean rowTest = false; //TODO make stricter connectivity test
+                boolean colTest = false;
                 for (int i = 0; i < n; i++) {
-                    if (b[i * (n-1) + j]) {
-                        colTest = true;
-                        break;
+                    rowTest = false;
+
+                    for (int j = 0; j < (n - 1); j++) {
+                        if (b[i * (n - 1) + j]) {
+                            rowTest = true;
+                            break;
+                        }
                     }
+                    if (!rowTest) break;
                 }
-                if (!colTest) break;
+                for (int x = 0; x < n; x++) {
+                    colTest = false;
+                    for (int i = 0; i < n; i++) {
+                        if (i != 0 && i < x && b[i * (n - 1) + x - 1]) {
+                            colTest = true;
+                            break;
+                        }
+                        if (i == x) continue;
+                        if (i > x && b[i * (n - 1) + x]) {
+                            colTest = true;
+                            break;
+                        }
+                    }
+                    if (!colTest) break;
+                }
+                if (rowTest && colTest) connectedGraph = true;
             }
-            if (rowTest && colTest) connectedGraph = true;
             iter++;
-            if (!connectedGraph && iter % (MAX_TRIES)==0 && iter < MAX_TRIES) {
-                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider resampling rates.");
+            if (!connectedGraph && iter % (MAX_TRIES/10)==0 && iter < MAX_TRIES) {
+                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider increasing "+scaleParamName+".");
             }
             if (!connectedGraph && iter >= MAX_TRIES) {
                 LoggerUtils.log.severe("Max iterations exceeded! Try resampling rates to keep the graph connected.");
@@ -127,7 +150,8 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
     public Map<String, Value> getParams() {
         return new TreeMap<>() {{
             put(ratesParamName, rates);
-            put(scaleParamName, k);
+            put(scaleParamName, a);
+            put(shapeParamName, k);
         }};
     }
 
@@ -138,6 +162,9 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
                 rates = value;
                 break;
             case scaleParamName:
+                a = value;
+                break;
+            case shapeParamName:
                 k = value;
                 break;
             default:
@@ -153,6 +180,10 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
 
     public Value<Number> getScale() {
         return getParams().get(scaleParamName);
+    }
+
+    public Value<Number> getShape() {
+        return getParams().get(shapeParamName);
     }
 
 
