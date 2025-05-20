@@ -1,6 +1,9 @@
 package abyss.lphybeast.tobeast.generator;
 
 import beast.base.core.BEASTInterface;
+import beast.base.core.Function;
+import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
+import beast.base.inference.operator.kernel.Transform;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import abyss.evolution.substitution.ABySSubstitutionModel;
@@ -9,18 +12,22 @@ import lphy.core.model.Value;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABySSubstitutionModel> {
     @Override
     public ABySSubstitutionModel generatorToBEAST(NonReversible nq, BEASTInterface value, BEASTContext context) {
 
         ABySSubstitutionModel beastNQ = new ABySSubstitutionModel();
 
-//        RealParameter freqParameter = new RealParameter(nq.getFreq().value());
         Value<Double[]> rates = nq.getRates();
+        Value<Double[]> freqs = nq.getFreq();
 
         RealParameter ratesParameter = (RealParameter)context.getBEASTObject(rates);
+        RealParameter freqParameter = (RealParameter)context.getBEASTObject(freqs);
 
-        int numStates = nq.getFreq().value().length;
+        int numStates = freqs.value().length;
         char[] states = new char[numStates];
 
         if (numStates == 4) {
@@ -45,22 +52,50 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         }
         String keys = String.join(" ", keysArray);
         String stateNames = new String(states).replace("", " ").trim();
-
         ratesParameter.setInputValue("keys", keys);
-        ratesParameter.initAndValidate();
 
         BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(nq.getIndicators());
         rateIndicatorParameter.setInputValue("keys", keys);
         rateIndicatorParameter.initAndValidate();
+        context.addSkipLoggable(rateIndicatorParameter);
 
         boolean symmetricParameter = false;
 
+        List<Transform> rateTransforms = new ArrayList<>();
+        rateTransforms.add(addLogTransform(ratesParameter));
+        addAVMNOperator(context, rateTransforms);
+
+        List<Transform> freqTransforms = new ArrayList<>();
+        freqTransforms.add(addLogTransform(freqParameter));
+        addAVMNOperator(context, freqTransforms);
+
+        ratesParameter.initAndValidate();
+        context.addSkipLoggable(ratesParameter);
+        context.addSkipLoggable(freqParameter);
+
         beastNQ.setInputValue("rates", ratesParameter);
-        beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies((RealParameter) context.getBEASTObject(nq.getFreq()), stateNames));
+        beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies((RealParameter) context.getBEASTObject(freqs), stateNames));
         beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
         beastNQ.setInputValue("symmetric", symmetricParameter);
         beastNQ.initAndValidate();
         return beastNQ;
+    }
+
+    private void addAVMNOperator(BEASTContext context, List<Transform> transforms) {
+        AdaptableVarianceMultivariateNormalOperator operator = new AdaptableVarianceMultivariateNormalOperator();
+        operator.initByName("weight", 1.0,"coefficient", 1.0,"scaleFactor", 1.0,"beta", 0.05,
+                "initial", 1000,"burnin",500, "allowNonsense", false, "transformations", transforms);
+        operator.setID("AVMN"); //TODO fix to differentiate rates/freqs?
+        context.addExtraOperator(operator);
+    }
+
+    private Transform addLogTransform(RealParameter parameter) {
+        List<Function> logFunc = new ArrayList<>();
+        logFunc.add(parameter);
+        Transform.LogTransform logTransform = new Transform.LogTransform();
+        logTransform.initByName("f", logFunc);
+        logTransform.setID("logTrans."+parameter.getID());
+        return logTransform;
     }
 
     @Override
