@@ -8,6 +8,8 @@ import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import abyss.evolution.substitution.ABySSubstitutionModel;
 import abyss.NonReversible;
+import jebl.evolution.sequences.SequenceType;
+import lphy.base.evolution.likelihood.PhyloCTMC;
 import lphy.core.model.Value;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
@@ -30,10 +32,13 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         int numStates = freqs.value().length;
         char[] states = new char[numStates];
 
-        if (numStates == 4) {
+        if (numStates == 4 && context.getAlignments().get(0).getGenerator() instanceof
+                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) {
             states = new char[] {'A', 'C', 'G', 'T'};
-        } else if (numStates == 20) {
-            states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
+        } else if (numStates == 20 && context.getAlignments().get(0).getGenerator() instanceof
+                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.AMINO_ACID) {
+            states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
+                    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
         } else {
             for (int i=0; i<numStates; i++) {
                 states[i] = (char) i;
@@ -45,7 +50,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         for (int i = 0; i < numStates; i++) {
             for (int j = 0; j < numStates; j++) {
                 if (j != i) {
-                    keysArray[x] = new String(new char[]{states[i], states[j]});
+                    keysArray[x] = new String(new char[]{states[i], '>', states[j]});
                     x++;
                 }
             }
@@ -62,12 +67,12 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         boolean symmetricParameter = false;
 
         List<Transform> rateTransforms = new ArrayList<>();
-        rateTransforms.add(addLogTransform(ratesParameter));
-        addAVMNOperator(context, rateTransforms);
+        rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
+        addAVMNOperator(context, rateTransforms, 10.0, "rates");
 
         List<Transform> freqTransforms = new ArrayList<>();
-        freqTransforms.add(addLogTransform(freqParameter));
-        addAVMNOperator(context, freqTransforms);
+        freqTransforms.add(addLogConstrainedSumTransform(freqParameter));
+        addAVMNOperator(context, freqTransforms, 1.0, "freqs");
 
         ratesParameter.initAndValidate();
         context.addSkipLoggable(ratesParameter);
@@ -81,11 +86,11 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return beastNQ;
     }
 
-    private void addAVMNOperator(BEASTContext context, List<Transform> transforms) {
+    private void addAVMNOperator(BEASTContext context, List<Transform> transforms, double weight, String id) {
         AdaptableVarianceMultivariateNormalOperator operator = new AdaptableVarianceMultivariateNormalOperator();
-        operator.initByName("weight", 1.0,"coefficient", 1.0,"scaleFactor", 1.0,"beta", 0.05,
+        operator.initByName("weight", weight,"coefficient", 1.0,"scaleFactor", 1.0,"beta", 0.05,
                 "initial", 1000,"burnin",500, "allowNonsense", false, "transformations", transforms);
-        operator.setID("AVMN"); //TODO fix to differentiate rates/freqs?
+        operator.setID("AVMN."+id);
         context.addExtraOperator(operator);
     }
 
@@ -96,6 +101,15 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         logTransform.initByName("f", logFunc);
         logTransform.setID("logTrans."+parameter.getID());
         return logTransform;
+    }
+
+    private Transform addLogConstrainedSumTransform(RealParameter parameter) {
+        List<Function> logFunc = new ArrayList<>();
+        logFunc.add(parameter);
+        Transform.LogConstrainedSumTransform logConstrainedSumTransform = new Transform.LogConstrainedSumTransform();
+        logConstrainedSumTransform.initByName("f", logFunc);
+        logConstrainedSumTransform.setID("logSumTrans."+parameter.getID());
+        return logConstrainedSumTransform;
     }
 
     @Override
