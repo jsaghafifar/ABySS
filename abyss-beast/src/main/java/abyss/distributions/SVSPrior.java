@@ -8,6 +8,7 @@ import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math3.util.FastMath;
 
 import java.util.List;
 import java.util.Random;
@@ -16,60 +17,49 @@ import java.util.Random;
 @Description("Bernoulli distribution, used as prior for SVS rate indicator booleans in rate matrices.")
 public class SVSPrior extends Distribution {
 
-    final public Input<RealParameter> pInput = new Input<>("p", "probability p parameter.", Input.Validate.REQUIRED);
-    final public Input<BooleanParameter> trialsInput = new Input<>("parameter", "the results of a series of bernoulli trials.");
+    final public Input<RealParameter> scaleInput = new Input<>("scale", "probability scale parameter.", Input.Validate.REQUIRED);
+    final public Input<RealParameter> shapeInput = new Input<>("shape", "probability shape parameter.", Input.Validate.REQUIRED);
+    final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.");
+    final public Input<RealParameter> empiricalRatesInput = new Input<>("rates", "rates informing bernoulli trials", Input.Validate.REQUIRED);
 
-//    final public Input<IntegerParameter> minSuccessesInput = new Input<>("minSuccesses",
-//            "Optional condition: the minimum number of ones in the boolean array.");
     protected SubstitutionModel substitutionModel;
-    private int numStates = substitutionModel.getStateCount();
+    private final int numStates = substitutionModel.getStateCount();
 
     public double calculateLogP() {
-        logP = 0.0;
+        this.logP = 0.0;
+        double a = this.scaleInput.get().getValue();
+        double k = this.shapeInput.get().getValue();
+        Boolean[] indicators = this.indicatorsInput.get().getValues();
+        Double[] rates = this.empiricalRatesInput.get().getValues();
 
-        BooleanParameter trials = trialsInput.get();
-        double p = pInput.get().getValue();
-//        IntegerParameter minSuccesses = minSuccessesInput.get();
+        double[] p = new double[rates.length];
+        for (int i = 0; i < p.length; i++) {
+            double x = Math.log(p.length * rates[i]);
+            x *= -k; // scaled
+            p[i] = a/(a + FastMath.exp(x));
+            if (p[i] < 0 || p[i] > 1)
+                return Double.NEGATIVE_INFINITY;
+        }
+        for (int i = 0; i < p.length; i++) {
+            logP += indicators[i] ? Math.log(p[i]) : Math.log(1-p[i]);
+        }
 
-
-        if (p < 0 | p > 1)
-            return Double.NEGATIVE_INFINITY;
-
-//        for (int i = 0; i < trials.getDimension(); i++) {
-//            logP += Math.log(trials.getValue(i) ? prob : 1.0 - prob);
-//        }
-
-        // uniform false not needed once impl
-
-        int n = trials.getDimension();
         int sum = 0;
-        for (int i = 0; i < n; i ++) {
-            if (trials.getValue(i)) {
+        for (int i = 0; i < indicators.length; i ++) {
+            if (indicators[i]) {
                 sum ++;
             }
         }
-
-        // reject if < minSuccesses
         if (sum < numStates)
             return Double.NEGATIVE_INFINITY;
 
-        Boolean[] trialValues = trials.getValues();
-        Double[] indicatorValues = new Double[n];
-        for (int i = 0; i < n; i++) {
-            indicatorValues[i] = trialValues[i] ? 1.0 : 0.0;
+        Double[] indicatorValues = new Double[indicators.length];
+        for (int i = 0; i < indicators.length; i++) {
+            indicatorValues[i] = indicators[i] ? 1.0 : 0.0;
         }
         if (!AbyssSVS.Utils.connectedAndWellConditioned(null, substitutionModel) ||
                 !AbyssSVS.Utils.isStronglyConnected(indicatorValues, numStates, false))
             return Double.NEGATIVE_INFINITY;
-        // Boolean[] trials != Double[] indicatorVals
-
-        // Binomial distribution
-        double logFactorialn=0, logFactorial1=0, logFactorial2=0;
-        for (int i = 2; i <= n;  i ++) logFactorialn += Math.log(i);
-        for (int i = 2; i <= sum; i ++) logFactorial1 += Math.log(i);
-        for (int i = 2; i <= (n-sum); i ++) logFactorial2 += Math.log(i);
-
-        logP = logFactorialn - (logFactorial1 + logFactorial2) + sum*Math.log(p) + (n-sum)*Math.log(1-p);
 
         return logP;
     }
@@ -89,10 +79,10 @@ public class SVSPrior extends Distribution {
         throw new UnsupportedOperationException();
     }
 
-//    @Override
-//    public void initAndValidate() {
-//        if (pInput.get().getDimension() != 1 && pInput.get().getDimension() != trialsInput.get().getDimension()) {
-//            throw new RuntimeException("p parameter must be size 1 or the same size as trials parameter but it was dimension " + pInput.get().getDimension());
-//        }
-//    }
+    @Override
+    public void initAndValidate() {
+        if (indicatorsInput.get().getDimension() != empiricalRatesInput.get().getDimension()) {
+            throw new RuntimeException("Indicators must be same size as empirical rates parameter but it was dimension " + empiricalRatesInput.get().getDimension());
+        }
+    }
 }
