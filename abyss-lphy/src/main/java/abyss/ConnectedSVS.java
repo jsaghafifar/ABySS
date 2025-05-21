@@ -19,7 +19,7 @@ import java.util.TreeMap;
  * for obtaining connected SVS rate indicators
  * @author jsaghafifar
  */
-public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
+public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements SVS {
     private Value<Double[]> rates;
     private Value<Number> a;
     private Value<Number> k;
@@ -94,44 +94,17 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> {
                     successes++;
                 } else b[i] = Boolean.FALSE;
             }
-
-            if (successes >= n) {
-                boolean rowTest = false; //TODO make stricter connectivity test
-                boolean colTest = false;
-                for (int i = 0; i < n; i++) {
-                    rowTest = false;
-
-                    for (int j = 0; j < (n - 1); j++) {
-                        if (b[i * (n - 1) + j]) {
-                            rowTest = true;
-                            break;
-                        }
-                    }
-                    if (!rowTest) break;
-                }
-                for (int x = 0; x < n; x++) {
-                    colTest = false;
-                    for (int i = 0; i < n; i++) {
-                        if (i != 0 && i < x && b[i * (n - 1) + x - 1]) {
-                            colTest = true;
-                            break;
-                        }
-                        if (i == x) continue;
-                        if (i > x && b[i * (n - 1) + x]) {
-                            colTest = true;
-                            break;
-                        }
-                    }
-                    if (!colTest) break;
-                }
-                if (rowTest && colTest) connectedGraph = true;
+            if (successes >= n &&
+                    SVS.Utils.isStronglyConnected(b, n, false) &&
+                    SVS.Utils.connectedAndWellConditioned(p)) {
+                connectedGraph = true;
             }
             iter++;
             if (!connectedGraph && iter % (MAX_TRIES/10)==0 && iter < MAX_TRIES) {
                 LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider increasing "+scaleParamName+".");
             }
             if (!connectedGraph && iter >= MAX_TRIES) {
-                LoggerUtils.log.severe("Max iterations exceeded! Try resampling rates to keep the graph connected.");
+                LoggerUtils.log.severe("Max iterations exceeded! Try increasing "+scaleParamName+" to keep the graph connected.");
                 throw new RuntimeException("Max iterations exceeded.");
             }
         }

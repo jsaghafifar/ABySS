@@ -1,5 +1,6 @@
 module abyss.lphy {
     requires transitive lphy.base;
+    requires colt;
 
     // add any req libs here
 //    requires ;
