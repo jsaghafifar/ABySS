@@ -3,7 +3,6 @@ package abyss.distributions;
 import abyss.inference.AbyssSVS;
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.inference.parameter.BooleanParameter;
@@ -21,9 +20,6 @@ public class SVSPrior extends Distribution {
     final public Input<RealParameter> shapeInput = new Input<>("shape", "probability shape parameter.", Input.Validate.REQUIRED);
     final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.");
     final public Input<RealParameter> empiricalRatesInput = new Input<>("rates", "rates informing bernoulli trials", Input.Validate.REQUIRED);
-
-    protected SubstitutionModel substitutionModel;
-    private final int numStates = substitutionModel.getStateCount();
 
     public double calculateLogP() {
         this.logP = 0.0;
@@ -44,6 +40,7 @@ public class SVSPrior extends Distribution {
             logP += indicators[i] ? Math.log(p[i]) : Math.log(1-p[i]);
         }
 
+        int numStates = (int) Math.abs((-1 - Math.sqrt(1+4*rates.length))/2);
         int sum = 0;
         for (int i = 0; i < indicators.length; i ++) {
             if (indicators[i]) {
@@ -57,7 +54,7 @@ public class SVSPrior extends Distribution {
         for (int i = 0; i < indicators.length; i++) {
             indicatorValues[i] = indicators[i] ? 1.0 : 0.0;
         }
-        if (!AbyssSVS.Utils.connectedAndWellConditioned(null, substitutionModel) ||
+        if (!AbyssSVS.Utils.connectedAndWellConditioned(p) ||
                 !AbyssSVS.Utils.isStronglyConnected(indicatorValues, numStates, false))
             return Double.NEGATIVE_INFINITY;
 
