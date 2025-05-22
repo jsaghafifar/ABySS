@@ -1,5 +1,6 @@
 package abyss.lphybeast.spi;
 
+import abyss.*;
 import beast.base.evolution.datatype.DataType;
 import jebl.evolution.sequences.SequenceType;
 import lphy.core.model.Generator;
@@ -30,7 +31,8 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
     // the first matching converter is used.
     @Override
     public List<Class<? extends GeneratorToBEAST>> getGeneratorToBEASTs() {
-        return Arrays.asList( NonReversibleToBEAST.class, NQPFAMToBEAST.class );
+        return Arrays.asList( NonReversibleToBEAST.class, NQPFAMToBEAST.class,
+                InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class );
     }
 
     // LPhy SequenceType => BEAST DataType
@@ -43,7 +45,10 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
 
     @Override
     public List<Class<? extends Generator>> getExcludedGenerator() {
-        return List.of();
+        return List.of(NQPFAMRates.class, NQPFAMFreqs.class,
+                FLURates.class, FLUFreqs.class,
+                HIVBRates.class, HIVBFreqs.class,
+                HIVWRates.class, HIVWFreqs.class);
     }
 
     @Override
