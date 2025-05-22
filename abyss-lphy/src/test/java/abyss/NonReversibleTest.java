@@ -107,7 +107,7 @@ class NonReversibleTest {
     void testNonRev(Double[] rates, Double[] freqs, final double[][] expectedP) {
 
         NonReversible nonrev = new NonReversible(new Value<>("rates", rates), new Value<>("freqs", freqs),
-                null, new Value<>("meanRate", 1.0));
+                null, new Value<>("meanRate", 1.0), new Value<>("symmetric", false));
 
         final Value Q = nonrev.apply();
 

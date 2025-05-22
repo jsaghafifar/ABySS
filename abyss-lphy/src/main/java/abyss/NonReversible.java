@@ -2,6 +2,7 @@ package abyss;
 
 import lphy.base.evolution.substitutionmodel.RateMatrix;
 import lphy.base.evolution.substitutionmodel.SubstModelParamNames;
+import lphy.core.logger.LoggerUtils;
 import lphy.core.model.Value;
 import lphy.core.model.annotation.GeneratorCategory;
 import lphy.core.model.annotation.GeneratorInfo;
@@ -12,14 +13,18 @@ import java.util.Arrays;
 
 public class NonReversible extends RateMatrix {
 
+    private Value<Boolean> symmetric;
+
     public static final String indicatorsParamName = "indicators";
     protected static final String ratesParamName = SubstModelParamNames.RatesParamName;
     protected static final String freqParamName = SubstModelParamNames.FreqParamName;
+    public static final String symmetricParamName = "symmetric";
 
     public NonReversible(@ParameterInfo(name = ratesParamName, narrativeName = "relative rates", description = "the relative rates of the substitution process.") Value<Double[]> rates,
                          @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.") Value<Double[]> freq,
                          @ParameterInfo(name = indicatorsParamName, narrativeName = "rate indicators", description = "a boolean for each rate to indicate the presence or absence of transition matrix entries", optional=true) Value<Boolean[]> indicators,
-                         @ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate) {
+                         @ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate,
+                         @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) { //TODO impl symmetric param
         super(meanRate);
 
         setParam(freqParamName, freq);
@@ -33,24 +38,16 @@ public class NonReversible extends RateMatrix {
         if (indicators != null) {
             if (indicators.value().length != rates.value().length)
                 throw new IllegalArgumentException("Indicators must have same number of dimensions as rates.");
-//            int x = 0;
-//            for (int i = 0; i < numStates; i++) {
-//                boolean test = false;
-//                for (int j = 0; j < (numStates - 1); j++) {
-//                    if (indicators.value()[x]) {
-//                        test = true;
-//                    } x++;
-//                } if (!test) {
-//                    throw new IllegalArgumentException("Rate indicators must have at least one true per row. " +
-//                            "Try increasing p or minSuccesses in Bernoulli distribution, or resampling.");
-//                }
-//            }
         } else {
             Boolean[] b = new Boolean[rates.value().length];
             Arrays.fill(b, true);
             indicators = new Value("indicators", b);
         }
         setParam(indicatorsParamName, indicators);
+
+        if (symmetric != null) {
+            setParam(symmetricParamName, symmetric);
+        } else setParam(symmetricParamName, new Value(null,false));
     }
 
     @GeneratorInfo(name = "nonReversible", verbClause = "is", narrativeName = "Estimated nonreversible substitution model",
@@ -88,9 +85,9 @@ public class NonReversible extends RateMatrix {
                 } else Q[i][j] = 0.0;
                 x++;
             }
-            if (Q[i][i]==0) throw new IllegalArgumentException("Empty row." +
+            if (Q[i][i]==0) LoggerUtils.log.severe("Empty row." +
                     "Rate indicators must have at least one true per row. " +
-                    "Try increasing p or minSuccesses in Bernoulli distribution, or resampling.");
+                    "Try increasing p in Bernoulli distribution, or using ConnectedSVS to ensure a connected graph.");
         }
         for (int i = 0; i < numStates; i++) {
             double test = 0.0;
@@ -98,9 +95,9 @@ public class NonReversible extends RateMatrix {
                 if (i==j) continue;
                 test += Q[j][i];
             }
-            if (test == 0.0) throw new IllegalArgumentException("Empty column." +
+            if (test == 0.0) LoggerUtils.log.severe("Empty column." +
                     "Rate indicators must have at least one true per column." +
-                    "Try increasing p or minSuccesses in Bernoulli distribution, or resampling.");
+                    "Try increasing p in Bernoulli distribution, or using ConnectedSVS to ensure a connected graph.");
         }
         normalize(f, Q, totalRateDefault1());
         return Q;
