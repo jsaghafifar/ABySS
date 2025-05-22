@@ -41,33 +41,35 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
             category = GeneratorCategory.PRIOR,
             description="The informed dirichlet probability distribution.")
     public RandomVariable<Double[]> sample() {
-        Double[] normConc = normaliseConcentration(conc);
+        Double[] normConc = normaliseConcentration(getConc(), getScale());
         Double[] dirichlet = new Double[normConc.length];
         double sum = 0.0;
+        double min = getScale().value().doubleValue() * normConc.length / 200000;
 
+        int x = 0;
         for (int i = 0; i < normConc.length; i++) {
             dirichlet[i] = MathUtils.randomGamma(normConc[i], 1.0, random);
+            if (dirichlet[i] < min) {dirichlet[i] = min; x++;}
             sum += dirichlet[i];
         }
+
+        if (x > 0 && x < (double) normConc.length/4) LoggerUtils.log.warning("Numbers close to zero were sampled "+x+
+                " time(s), and were fixed to a minimum value for "+this.getConc().getId()+". Consider increasing "+
+                scaleParamName+" of "+this.getName()+".");
+        if (x >= (double) normConc.length/4) LoggerUtils.log.severe("Numbers close to zero were sampled "+x+
+                " time(s), and were fixed to a minimum value for "+this.getConc().getId()+". Increasing "+
+                scaleParamName+" of "+this.getName()+" is strongly recommended.");
 
         // dirichlet normalised to sum to 1
         for (int i = 0; i < dirichlet.length; i++) {
             dirichlet[i] /= sum;
         }
 
-        int x = 0;
-        for (int i = 0; i < dirichlet.length; i++) {
-            if (dirichlet[i] < 1e-6) x++;
-            if (x > dirichlet.length/10) throw new IllegalArgumentException("At least one dirichlet close to zero, increase " +
-                        scaleParamName +" ("+ omega +").");
-
-        }
-
         return new RandomVariable<>("x", dirichlet, this);
     }
 
     public double density(Double[] d) {
-        Double[] alpha = normaliseConcentration(conc);
+        Double[] alpha = normaliseConcentration(getConc(), getScale());
         if (alpha.length != d.length) {
             throw new IllegalArgumentException("Dimensions don't match");
         }
@@ -81,7 +83,7 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
         for (double a : d){
             sumD += a;
         }
-
+            //TODO factor in fixed minimum vals here?
         // calc gamma(sumAlpha)
         double gammaSumAlpha = org.apache.commons.math3.special.Gamma.gamma(sumAlpha);
         // calc ∏ Gamma(alpha_i)
@@ -135,14 +137,14 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
         return omega;
     }
 
-    protected Double[] normaliseConcentration(Value<Number[]> conc) {
-        Double[] normConc = (Double[]) this.conc.value();
+    protected Double[] normaliseConcentration(Value<Number[]> conc, Value<Number> scale) {
+        Double[] normConc = (Double[]) conc.value();
         double sum = 0.0;
         for (int i = 0; i < normConc.length; i++) {
             sum += normConc[i];
         }
 
-        double omega = getScale().value().doubleValue();
+        double omega = scale.value().doubleValue();
         double finalSum = 0.0;
 
         // conc normalised and scaled to sum to omega
@@ -152,11 +154,11 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
             finalSum += normConc[i];
         }
         if (Math.abs(finalSum - omega*normConc.length) > 1e-6) throw new IllegalArgumentException("Conc must be normalised to sum to "+ scaleParamName + "*numRates = "+omega*normConc.length+".");
-        int x = 0;
-        for (int i = 0; i < normConc.length; i++) {
-            if (normConc[i] < 1.0) x++;
-            if (x > normConc.length/10) LoggerUtils.log.warning("At least one concentration is less than 1 after scaling. Consider increasing "+ scaleParamName + " by "+(double)Math.round(1/normConc[i] * 100d) / 100d+ " times to avoid zeroed rates.");
-        }
+//        int x = 0;
+//        for (int i = 0; i < normConc.length; i++) {
+//            if (normConc[i] < 1.0) x++;
+//            if (x > normConc.length/10) LoggerUtils.log.warning("At least one concentration is less than 1 after scaling. Consider increasing "+ scaleParamName + " by "+(double)Math.round(1/normConc[i] * 100d) / 100d+ " times to avoid zeroed rates.");
+//        }
         return normConc;
     }
 }
