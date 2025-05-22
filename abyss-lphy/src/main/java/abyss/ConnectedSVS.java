@@ -101,10 +101,10 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
             }
             iter++;
             if (!connectedGraph && iter % (MAX_TRIES/10)==0 && iter < MAX_TRIES) {
-                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider increasing "+scaleParamName+".");
+                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider increasing "+scaleParamName+" of "+this.getName()+".");
             }
             if (!connectedGraph && iter >= MAX_TRIES) {
-                LoggerUtils.log.severe("Max iterations exceeded! Try increasing "+scaleParamName+" to keep the graph connected.");
+                LoggerUtils.log.severe("Max iterations exceeded! Try increasing "+scaleParamName+" of "+this.getName()+" to keep the graph connected.");
                 throw new RuntimeException("Max iterations exceeded.");
             }
         }
