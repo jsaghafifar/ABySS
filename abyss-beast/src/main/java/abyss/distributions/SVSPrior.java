@@ -20,6 +20,7 @@ public class SVSPrior extends Distribution {
     final public Input<RealParameter> shapeInput = new Input<>("shape", "probability shape parameter.", Input.Validate.REQUIRED);
     final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.");
     final public Input<RealParameter> empiricalRatesInput = new Input<>("rates", "rates informing bernoulli trials", Input.Validate.REQUIRED);
+    final public Input<Boolean> isSymmetricInput = new Input<>("symmetric", "whether rates come from symmetric matrix", Input.Validate.REQUIRED);
 
     public double calculateLogP() {
         this.logP = 0.0;
@@ -27,6 +28,7 @@ public class SVSPrior extends Distribution {
         double k = this.shapeInput.get().getValue();
         Boolean[] indicators = this.indicatorsInput.get().getValues();
         Double[] rates = this.empiricalRatesInput.get().getValues();
+        Boolean sym = this.isSymmetricInput.get();
 
         double[] p = new double[rates.length];
         for (int i = 0; i < p.length; i++) {
@@ -40,7 +42,10 @@ public class SVSPrior extends Distribution {
             logP += indicators[i] ? Math.log(p[i]) : Math.log(1-p[i]);
         }
 
-        int numStates = (int) Math.abs((-1 - Math.sqrt(1+4*rates.length))/2);
+        int numStates;
+        if (sym) numStates = (int) Math.abs((-1 - Math.sqrt(1+8*rates.length))/2);
+        else numStates = (int) Math.abs((-1 - Math.sqrt(1+4*rates.length))/2);
+
         int sum = 0;
         for (int i = 0; i < indicators.length; i ++) {
             if (indicators[i]) {
@@ -55,7 +60,7 @@ public class SVSPrior extends Distribution {
             indicatorValues[i] = indicators[i] ? 1.0 : 0.0;
         }
         if (!AbyssSVS.Utils.connectedAndWellConditioned(p) ||
-                !AbyssSVS.Utils.isStronglyConnected(indicatorValues, numStates, false))
+                !AbyssSVS.Utils.isStronglyConnected(indicatorValues, numStates, sym))
             return Double.NEGATIVE_INFINITY;
 
         return logP;

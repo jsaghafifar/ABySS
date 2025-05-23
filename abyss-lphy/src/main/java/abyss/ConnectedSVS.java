@@ -12,6 +12,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -23,6 +24,7 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
     private Value<Double[]> rates;
     private Value<Number> a;
     private Value<Number> k;
+    private Value<Boolean> symmetric;
 
     private static final int MAX_TRIES = 10000;
     private double[] p;
@@ -30,23 +32,27 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
     public static final String ratesParamName = SubstModelParamNames.RatesParamName;
     public static final String scaleParamName = "scale";
     public static final String shapeParamName = "shape";
+    public static final String symmetricParamName = "symmetric";
 
     public ConnectedSVS(@ParameterInfo(name = ratesParamName, narrativeName = "rates", description = "normalised nonreversible empirical rate matrix") Value<Double[]> rates,
                         @ParameterInfo(name = scaleParamName, narrativeName = "scale", description = "scale of active rates, default 1", optional=true) Value<Number> a,
-                        @ParameterInfo(name = shapeParamName, narrativeName = "shape", description = "indicators' sensitivity to rates, default 1", optional=true) Value<Number> k) {
+                        @ParameterInfo(name = shapeParamName, narrativeName = "shape", description = "indicators' sensitivity to rates, default 1", optional=true) Value<Number> k,
+                        @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) {
         super();
         this.rates = rates;
         if (a != null) {
             if (a.value().doubleValue() > 0) {
                 this.a = a;
-            } else throw new IllegalArgumentException(scaleParamName+" must be > 0.");
+            } else throw new IllegalArgumentException(scaleParamName+" must be over 0.");
         } else this.a = new Value(1.0,null);
 
         if (k != null) {
             if (k.value().doubleValue() > 0) {
                 this.k = k;
-            } else throw new IllegalArgumentException(shapeParamName+" must be > 0.");
+            } else throw new IllegalArgumentException(shapeParamName+" must be over 0.");
         } else this.k = new Value(1.0,null);
+
+        setParam(symmetricParamName, Objects.requireNonNullElseGet(symmetric, () -> new Value(null, false)));
 
         constructDistribution(random);
     }
@@ -68,12 +74,15 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
         if (Math.abs(sum - 1.0) > 1e-6) throw new IllegalArgumentException("Rates must be normalised to sum to 1.");
 
         int n;
-        double root = (-1 - Math.sqrt(1+4*r.length))/2;
+        double root;
+        Boolean sym = getSymmetric().value();
+        if (sym) root = (-1 - Math.sqrt(1+8*r.length)) / 2;
+        else root = (-1 - Math.sqrt(1+4*r.length))/2;
         if (root % 1 == 0) {
             n = (int) Math.abs(root);
         } else throw new IllegalArgumentException(
-                "Wrong number of rates. Must be such that n(n-1) (n = number of states). " +
-                        "e.g. 4 nucleotide states = 12 rates.");
+                "Wrong number of rates. Must be such that n(n-1) or n(n-1)/2 (n = number of states). " +
+                        "e.g. 4 nucleotide states = 12 rates asymmetric or 6 symmetric.");
 
         Boolean[] b = new Boolean[r.length];
         boolean connectedGraph = false;
@@ -95,8 +104,7 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
                 } else b[i] = Boolean.FALSE;
             }
             if (successes >= n &&
-                    SVS.Utils.isStronglyConnected(b, n, false) &&
-                    SVS.Utils.connectedAndWellConditioned(p)) {
+                    SVS.Utils.isStronglyConnected(b, n, sym)) {
                 connectedGraph = true;
             }
             iter++;
@@ -125,6 +133,7 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
             put(ratesParamName, rates);
             put(scaleParamName, a);
             put(shapeParamName, k);
+            put(symmetricParamName, symmetric);
         }};
     }
 
@@ -139,6 +148,9 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
                 break;
             case shapeParamName:
                 k = value;
+                break;
+            case symmetricParamName:
+                symmetric = value;
                 break;
             default:
                 throw new RuntimeException("Unrecognised parameter name: " + paramName);
@@ -157,6 +169,10 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
 
     public Value<Number> getShape() {
         return getParams().get(shapeParamName);
+    }
+
+    public Value<Boolean> getSymmetric() {
+        return getParams().get(symmetricParamName);
     }
 
 

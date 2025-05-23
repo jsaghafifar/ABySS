@@ -141,6 +141,7 @@ public class InformedDirichlet extends ParametricDistribution<Double[]> {
         Double[] normConc = (Double[]) conc.value();
         double sum = 0.0;
         for (int i = 0; i < normConc.length; i++) {
+            if (normConc[i] < 5e-6) normConc[i] = 5e-6;
             sum += normConc[i];
         }
 
