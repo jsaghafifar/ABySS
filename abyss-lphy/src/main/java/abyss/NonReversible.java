@@ -24,14 +24,22 @@ public class NonReversible extends RateMatrix {
                          @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.") Value<Double[]> freq,
                          @ParameterInfo(name = indicatorsParamName, narrativeName = "rate indicators", description = "a boolean for each rate to indicate the presence or absence of transition matrix entries", optional=true) Value<Boolean[]> indicators,
                          @ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate,
-                         @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) { //TODO impl symmetric param
+                         @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) {
         super(meanRate);
 
         setParam(freqParamName, freq);
         int numStates = freq.value().length;
 
-        if (rates.value().length != (numStates * numStates - numStates)) {
-            throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
+        if (symmetric != null) {
+            setParam(symmetricParamName, symmetric);
+            if (!symmetric.value() && rates.value().length != (numStates * numStates - numStates))
+                throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
+            if (symmetric.value() && rates.value().length != (numStates * numStates - numStates)/2)
+                throw new IllegalArgumentException("Rates must have have (n²-n)/2 number of dimensions as frequencies.");
+        } else {
+            setParam(symmetricParamName, new Value(null,false));
+            if (rates.value().length != (numStates * numStates - numStates))
+                throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
         }
         setParam(ratesParamName, rates);
 
@@ -41,49 +49,64 @@ public class NonReversible extends RateMatrix {
         } else {
             Boolean[] b = new Boolean[rates.value().length];
             Arrays.fill(b, true);
-            indicators = new Value("indicators", b);
+            indicators = new Value(null, b);
         }
         setParam(indicatorsParamName, indicators);
 
-        if (symmetric != null) {
-            setParam(symmetricParamName, symmetric);
-        } else setParam(symmetricParamName, new Value(null,false));
+
     }
 
     @GeneratorInfo(name = "nonReversible", verbClause = "is", narrativeName = "Estimated nonreversible substitution model",
             category = GeneratorCategory.RATE_MATRIX,
-            description = "A variable asymmetric rate matrix using stochastic variable selection for nonreversible substitution.")
+            description = "A customisable rate matrix using stochastic variable selection for nonreversible substitution.")
     public Value<Double[][]> apply() {
         Double[][] Q = getQ();
         return new DoubleArray2DValue(Q, this);
     }
 
     @Override
-    public boolean canReturnComplexDiagonalization() { return true; }
+    public boolean canReturnComplexDiagonalization() { return !getSymmetric().value(); }
 
     protected Double[][] getQ() {
         Double[] r = getRates().value();
         Double[] f = getFreq().value();
         Boolean[] b = getIndicators().value();
+        Boolean sym = getSymmetric().value();
 
         int numStates = f.length;
         Double[][] Q = new Double[numStates][numStates];
         int x = 0;
         for (int i = 0; i < numStates; i++) {
             Q[i][i] = 0.0;
-            for (int j = 0; j < i; j++) {
-                if (b[x]) {
-                    Q[i][j] = r[x] * f[j];
+            if (!sym) {
+                for (int j = 0; j < i; j++) {
+                    if (b[x]) Q[i][j] = r[x] * f[j];
+                    else Q[i][j] = 0.0;
                     Q[i][i] -= Q[i][j];
-                } else Q[i][j] = 0.0;
-                x++;
-            }
-            for (int j = i + 1; j < numStates; j++) {
-                if (b[x]) {
-                    Q[i][j] = r[x] * f[j];
+                    x++;
+                }
+                for (int j = i + 1; j < numStates; j++) {
+                    if (b[x]) {
+                        Q[i][j] = r[x] * f[j];
+                    } else Q[i][j] = 0.0;
                     Q[i][i] -= Q[i][j];
-                } else Q[i][j] = 0.0;
-                x++;
+                    x++;
+                }
+            } else {
+                for (int j = i + 1; j < numStates; j++) {
+                    if (b[x]) {
+                        Q[i][j] = r[x] * f[j];
+                        Q[j][i] = r[x] * f[i];
+                    } else {
+                        Q[i][j] = 0.0;
+                        Q[j][i] = 0.0;
+                    }
+                    x++;
+                }
+                for (int j = 0; j < numStates; j++) {
+                    if (i==j) continue;
+                    Q[i][i] -= Q[i][j];
+                }
             }
             if (Q[i][i]==0) LoggerUtils.log.severe("Empty row." +
                     "Rate indicators must have at least one true per row. " +
@@ -113,6 +136,10 @@ public class NonReversible extends RateMatrix {
 
     public Value<Boolean[]> getIndicators() {
         return getParams().get(indicatorsParamName);
+    }
+
+    public Value<Boolean> getSymmetric() {
+        return getParams().get(symmetricParamName);
     }
 
 }

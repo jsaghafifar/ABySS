@@ -45,16 +45,30 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             }
         }
 
-        String[] keysArray = new String[numStates * numStates - numStates];
+        Boolean symmetricParameter = nq.getSymmetric().value();
+
+        String[] keysArray;
         int x = 0;
-        for (int i = 0; i < numStates; i++) {
-            for (int j = 0; j < numStates; j++) {
-                if (j != i) {
-                    keysArray[x] = new String(new char[]{states[i], '>', states[j]});
+        if (!symmetricParameter) {
+            keysArray = new String[numStates * numStates - numStates];
+            for (int i = 0; i < numStates; i++) {
+                for (int j = 0; j < numStates; j++) {
+                    if (j != i) {
+                        keysArray[x] = new String(new char[]{states[i], '.', states[j]});
+                        x++;
+                    }
+                }
+            }
+        } else {
+            keysArray = new String[(numStates * numStates - numStates)/2];
+            for (int i = 0; i < numStates; i++) {
+                for (int j = i + 1; j < numStates; j++) {
+                    keysArray[x] = new String(new char[]{states[i], '.', states[j]});
                     x++;
                 }
             }
         }
+
         String keys = String.join(" ", keysArray);
         String stateNames = new String(states).replace("", " ").trim();
         ratesParameter.setInputValue("keys", keys);
@@ -62,9 +76,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(nq.getIndicators());
         rateIndicatorParameter.setInputValue("keys", keys);
         rateIndicatorParameter.initAndValidate();
-        context.addSkipLoggable(rateIndicatorParameter);
-
-        boolean symmetricParameter = false;
+        context.addSkipLoggable(rateIndicatorParameter); //TODO add bitflip operator spec: uniform=false
 
         List<Transform> rateTransforms = new ArrayList<>();
         rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
