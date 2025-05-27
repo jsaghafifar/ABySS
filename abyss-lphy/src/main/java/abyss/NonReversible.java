@@ -21,28 +21,25 @@ public class NonReversible extends RateMatrix {
     public static final String symmetricParamName = "symmetric";
 
     public NonReversible(@ParameterInfo(name = ratesParamName, narrativeName = "relative rates", description = "the relative rates of the substitution process.") Value<Double[]> rates,
-                         @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.") Value<Double[]> freq,
+                         @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.", optional = true) Value<Double[]> freq,
                          @ParameterInfo(name = indicatorsParamName, narrativeName = "rate indicators", description = "a boolean for each rate to indicate the presence or absence of transition matrix entries", optional=true) Value<Boolean[]> indicators,
                          @ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate,
                          @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) {
         super(meanRate);
 
-        setParam(freqParamName, freq);
-        int numStates = freq.value().length;
+        if (symmetric == null) symmetric = new Value(null,false);
+        setParam(symmetricParamName, symmetric);
 
-        if (symmetric != null) {
-            setParam(symmetricParamName, symmetric);
-            if (!symmetric.value() && rates.value().length != (numStates * numStates - numStates))
-                throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
-            if (symmetric.value() && rates.value().length != (numStates * numStates - numStates)/2)
-                throw new IllegalArgumentException("Rates must have have (n²-n)/2 number of dimensions as frequencies.");
-        } else {
-            setParam(symmetricParamName, new Value(null,false));
-            if (rates.value().length != (numStates * numStates - numStates))
-                throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
-        }
+        int numStates = getNumStates(rates, symmetric);
         setParam(ratesParamName, rates);
 
+        if (freq == null) {
+            double f = (double) 1 /numStates;
+            Double[] freqs = new Double[numStates];
+            Arrays.fill(freqs, f);
+            freq = new Value(null, freqs);
+        }
+        setParam(freqParamName, freq);
         if (indicators != null) {
             if (indicators.value().length != rates.value().length)
                 throw new IllegalArgumentException("Indicators must have same number of dimensions as rates.");
@@ -54,6 +51,20 @@ public class NonReversible extends RateMatrix {
         setParam(indicatorsParamName, indicators);
 
 
+    }
+
+    private static int getNumStates(Value<Double[]> rates, Value<Boolean> symmetric) {
+        int numStates;
+        if (symmetric.value()) {
+            double root = (-1 - Math.sqrt(1+8* rates.value().length))/2;
+            if (root - (int) root < 1e-6) numStates = (int) Math.abs(root);
+            else throw new IllegalArgumentException("Rates must have have (n²-n)/2 number of dimensions as frequencies.");
+        } else {
+            double root = (-1 - Math.sqrt(1+4* rates.value().length))/2;
+            if (root - (int) root < 1e-6) numStates = (int) Math.abs(root);
+            else throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
+        }
+        return numStates;
     }
 
     @GeneratorInfo(name = "nonReversible", verbClause = "is", narrativeName = "Estimated nonreversible substitution model",
