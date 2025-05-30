@@ -4,9 +4,10 @@
     <!-- add BEAST2 service below  -->
 
     <service type="beast.base.core.BEASTInterface">
-        <provider classname="abyss.evolution.substitution.ABySSubstitutionModel"/>
-        <provider classname="abyss.distributions.InformedDirichletPrior"/>
         <provider classname="abyss.distributions.SVSPrior"/>
+        <provider classname="abyss.evolution.substitution.ABySSubstitutionModel"/>
+        <provider classname="abyss.evolution.substitution.ABySSFrequencyLogger"/>
+        <provider classname="abyss.distributions.InformedDirichletPrior"/>
         <provider classname="abyss.inference.AbyssSVS"/>
     </service>
 
