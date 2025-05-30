@@ -1,5 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
+import abyss.evolution.substitution.ABySSFrequencyLogger;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
@@ -25,74 +26,45 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
 
         Value<Double[]> rates = nq.getRates();
         Value<Double[]> freqs = nq.getFreq();
+        Value<Boolean[]> indicators = nq.getIndicators();
+        Value<Boolean> symmetric = nq.getSymmetric();
+
+        int numStates = freqs.value().length;
 
         RealParameter ratesParameter = (RealParameter)context.getBEASTObject(rates);
         RealParameter freqParameter = (RealParameter)context.getBEASTObject(freqs);
+        BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
 
-        int numStates = freqs.value().length;
-        char[] states = new char[numStates];
-
-        if (numStates == 4 && context.getAlignments().get(0).getGenerator() instanceof
-                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) {
-            states = new char[] {'A', 'C', 'G', 'T'};
-        } else if (numStates == 20 && context.getAlignments().get(0).getGenerator() instanceof
-                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.AMINO_ACID) {
-            states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
-                    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
-        } else {
-            for (int i=0; i<numStates; i++) {
-                states[i] = (char) i;
-            }
-        }
-
-        Boolean symmetricParameter = nq.getSymmetric().value();
-
-        String[] keysArray;
-        int x = 0;
-        if (!symmetricParameter) {
-            keysArray = new String[numStates * numStates - numStates];
-            for (int i = 0; i < numStates; i++) {
-                for (int j = 0; j < numStates; j++) {
-                    if (j != i) {
-                        keysArray[x] = new String(new char[]{states[i], '.', states[j]});
-                        x++;
-                    }
-                }
-            }
-        } else {
-            keysArray = new String[(numStates * numStates - numStates)/2];
-            for (int i = 0; i < numStates; i++) {
-                for (int j = i + 1; j < numStates; j++) {
-                    keysArray[x] = new String(new char[]{states[i], '.', states[j]});
-                    x++;
-                }
-            }
-        }
-
-        String keys = String.join(" ", keysArray);
+        char[] states = getStateNames(context, numStates);
         String stateNames = new String(states).replace("", " ").trim();
-        ratesParameter.setInputValue("keys", keys);
+        String keys = getRateKeys(states, numStates, symmetric.value());
 
-        BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(nq.getIndicators());
+        String[] statesList = new String[states.length];
+        for (int i = 0; i < states.length; i++) {
+            statesList[i] = String.valueOf(states[i]);
+        }
+
+        ratesParameter.setInputValue("keys", keys);
+        ratesParameter.initAndValidate();
         rateIndicatorParameter.setInputValue("keys", keys);
         rateIndicatorParameter.initAndValidate();
         //TODO add bitflip operator spec: uniform=false
 
-        List<Transform> rateTransforms = new ArrayList<>();
-        rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
-        addAVMNOperator(context, rateTransforms, 10.0, "rates");
-
-        List<Transform> freqTransforms = new ArrayList<>();
-        freqTransforms.add(addLogConstrainedSumTransform(freqParameter));
-        addAVMNOperator(context, freqTransforms, 1.0, "freqs");
-
-        ratesParameter.initAndValidate();
+//        List<Transform> rateTransforms = new ArrayList<>();
+//        rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
+//        addAVMNOperator(context, rateTransforms, 10.0, "rates");
+//
+//        List<Transform> freqTransforms = new ArrayList<>();
+//        freqTransforms.add(addLogConstrainedSumTransform(freqParameter));
+//        addAVMNOperator(context, freqTransforms, 1.0, "freqs");
 
         beastNQ.setInputValue("rates", ratesParameter);
-        beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies((RealParameter) context.getBEASTObject(freqs), stateNames));
+        beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
         beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
-        beastNQ.setInputValue("symmetric", symmetricParameter);
+        beastNQ.setInputValue("symmetric", symmetric.value());
         beastNQ.initAndValidate();
+        addFreqLogger(context, beastNQ, statesList);
+
         return beastNQ;
     }
 
@@ -120,6 +92,59 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         logConstrainedSumTransform.initByName("f", logFunc);
         logConstrainedSumTransform.setID("logSumTrans."+parameter.getID());
         return logConstrainedSumTransform;
+    }
+
+    private void addFreqLogger(BEASTContext context, ABySSubstitutionModel model, String[] keys) {
+        ABySSFrequencyLogger frequencyLogger = new ABySSFrequencyLogger();
+        frequencyLogger.setInputValue("model", model);
+//        frequencyLogger.setInputValue("keys", keys);
+        frequencyLogger.initAndValidate();
+
+        context.addExtraLoggable(frequencyLogger);
+    }
+
+    private char[] getStateNames(BEASTContext context, int numStates) {
+        char[] states = new char[numStates];
+
+        if (numStates == 4 && context.getAlignments().get(0).getGenerator() instanceof
+                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) {
+            states = new char[] {'A', 'C', 'G', 'T'};
+        } else if (numStates == 20 && context.getAlignments().get(0).getGenerator() instanceof
+                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.AMINO_ACID) {
+            states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
+                    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
+        } else {
+            for (int i=0; i<numStates; i++) {
+                states[i] = (char) i;
+            }
+        }
+        return states;
+    }
+
+    private String getRateKeys(char[] states, int numStates, Boolean symmetric) {
+        String[] keysArray;
+        int x = 0;
+        if (!symmetric) {
+            keysArray = new String[numStates * numStates - numStates];
+            for (int i = 0; i < numStates; i++) {
+                for (int j = 0; j < numStates; j++) {
+                    if (j != i) {
+                        keysArray[x] = new String(new char[]{states[i], '.', states[j]});
+                        x++;
+                    }
+                }
+            }
+        } else {
+            keysArray = new String[(numStates * numStates - numStates)/2];
+            for (int i = 0; i < numStates; i++) {
+                for (int j = i + 1; j < numStates; j++) {
+                    keysArray[x] = new String(new char[]{states[i], '.', states[j]});
+                    x++;
+                }
+            }
+        }
+
+        return String.join(" ", keysArray);
     }
 
     @Override
