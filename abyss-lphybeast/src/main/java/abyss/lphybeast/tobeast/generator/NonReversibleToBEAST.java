@@ -50,13 +50,9 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         rateIndicatorParameter.initAndValidate();
         //TODO add bitflip operator spec: uniform=false
 
-//        List<Transform> rateTransforms = new ArrayList<>();
-//        rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
-//        addAVMNOperator(context, rateTransforms, 10.0, "rates");
-//
-//        List<Transform> freqTransforms = new ArrayList<>();
-//        freqTransforms.add(addLogConstrainedSumTransform(freqParameter));
-//        addAVMNOperator(context, freqTransforms, 1.0, "freqs");
+        List<Transform> rateTransforms = new ArrayList<>();
+        rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
+        addAVMNOperator(context, rateTransforms, 10.0, "rates");
 
         beastNQ.setInputValue("rates", ratesParameter);
         beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
