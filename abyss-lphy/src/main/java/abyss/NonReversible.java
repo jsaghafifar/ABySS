@@ -1,5 +1,6 @@
 package abyss;
 
+import lphy.base.evolution.eigensystem.*;
 import lphy.base.evolution.substitutionmodel.RateMatrix;
 import lphy.base.evolution.substitutionmodel.SubstModelParamNames;
 import lphy.core.logger.LoggerUtils;
@@ -14,6 +15,7 @@ import java.util.Arrays;
 public class NonReversible extends RateMatrix {
 
     private Value<Boolean> symmetric;
+    private static final double BRANCH_LENGTH = 1e6;
 
     public static final String indicatorsParamName = "indicators";
     protected static final String ratesParamName = SubstModelParamNames.RatesParamName;
@@ -91,15 +93,12 @@ public class NonReversible extends RateMatrix {
             Q[i][i] = 0.0;
             if (!sym) {
                 for (int j = 0; j < i; j++) {
-                    if (b[x]) Q[i][j] = r[x] * f[j];
-                    else Q[i][j] = 0.0;
+                    Q[i][j] = b[x] ? r[x] : Double.valueOf(0.0);
                     Q[i][i] -= Q[i][j];
                     x++;
                 }
                 for (int j = i + 1; j < numStates; j++) {
-                    if (b[x]) {
-                        Q[i][j] = r[x] * f[j];
-                    } else Q[i][j] = 0.0;
+                    Q[i][j] = b[x] ? r[x] : Double.valueOf(0.0);
                     Q[i][i] -= Q[i][j];
                     x++;
                 }
@@ -133,8 +132,81 @@ public class NonReversible extends RateMatrix {
                     "Rate indicators must have at least one true per column." +
                     "Try increasing p in Bernoulli distribution, or using ConnectedSVS to ensure a connected graph.");
         }
-        normalize(f, Q, totalRateDefault1());
+        if (!sym) f = getEquilibriumFrequencies(numStates, Q);
+        double subst = 0.0;
+        for (int i = 0; i < Q.length; i++) {
+            subst += -Q[i][i] * f[i];
+        }
+
+        for (int i = 0; i < Q.length; i++) {
+            for (int j = 0; j < Q.length; j++) {
+                Q[i][j] = Q[i][j] / subst;
+            }
+        }
         return Q;
+    }
+
+    private Double[] getEquilibriumFrequencies(int numStates, Double[][] Qm) {
+        double temp;
+
+        EigenSystem complexEigenSystem = new ComplexColtEigenSystem(numStates);
+        EigenDecompositionExt complexDecomposition = complexEigenSystem.decomposeMatrix(Qm);
+        double[] Eval = complexDecomposition.getEigenValues();
+        double[] evec = complexDecomposition.getEigenVectors();
+        double[] ievc = complexDecomposition.getInverseEigenVectors();
+
+        double[][] iexp = new double[numStates][numStates];
+        double[] EvalImag = new double[numStates];
+        double[][] transProbs = new double[numStates][numStates];
+
+        System.arraycopy(Eval, numStates, EvalImag, 0, numStates);
+        for (int i = 0; i < numStates; i++) {
+            if (EvalImag[i] == 0) {
+                // 1x1 block
+                temp = Math.exp(BRANCH_LENGTH * Eval[i]);
+                for (int j = 0; j < numStates; j++) {
+                    iexp[i][j] = ievc[i * numStates + j] * temp;
+                }
+            } else {
+                // 2x2 conjugate block
+                // If A is 2x2 with complex conjugate pair eigenvalues a +/- bi, then
+                // exp(At) = exp(at)*( cos(bt)I + \frac{sin(bt)}{b}(A - aI)).
+                int i2 = i + 1;
+                double b = EvalImag[i];
+                double expat = Math.exp(BRANCH_LENGTH * Eval[i]);
+                double expatcosbt = expat * Math.cos(BRANCH_LENGTH * b);
+                double expatsinbt = expat * Math.sin(BRANCH_LENGTH * b);
+
+                for (int j = 0; j < numStates; j++) {
+                    iexp[i][j] = expatcosbt * ievc[i * numStates + j] +
+                            expatsinbt * ievc[i2 * numStates + j];
+                    iexp[i2][j] = expatcosbt * ievc[i2 * numStates + j] -
+                            expatsinbt * ievc[i * numStates + j];
+                }
+                i++; // processed two conjugate rows
+            }
+        }
+
+        for (int i = 0; i < numStates; i++) {
+            for (int j = 0; j < numStates; j++) {
+                temp = 0.0;
+                for (int k = 0; k < numStates; k++) {
+                    temp += evec[i * numStates + k] * iexp[k][j];
+                }
+                transProbs[i][j] = Math.abs(temp);
+            }
+        }
+        Double[] freqs = new Double[transProbs.length];
+        for (int i = 0; i < freqs.length; i++) {
+            freqs[i] = transProbs[0][i];
+            for (int j = 1; j < freqs.length; j++) {
+                if (Math.abs(transProbs[0][i] - transProbs[j][i]) > 1e-12) {
+                    System.out.println("WARNING: branch length used to get equilibrium distribution was not long enough!");
+                }
+
+            }
+        }
+        return freqs;
     }
 
     public Value<Double[]> getRates() {
