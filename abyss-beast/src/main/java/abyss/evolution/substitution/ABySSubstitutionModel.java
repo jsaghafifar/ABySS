@@ -8,6 +8,7 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.substitutionmodel.ComplexSubstitutionModel;
 import beast.base.evolution.substitutionmodel.DefaultEigenSystem;
+import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.Parameter;
@@ -36,6 +37,7 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
 
     private BooleanParameter rateIndicator;
     private boolean isSymmetric = false;
+    private static final double BRANCH_LENGTH = 1e6;
 
     @Override
     public void initAndValidate(){
@@ -58,26 +60,15 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
             }
             Log.warning.println("Setting dimension of indicators to " + dim);
             indicator.get().setDimension(dim);
-            isSymmetric = true;
+            isSymmetric = false;
         }
 
         if (!isSymmetricInput.get() && eigenSystemClass.equals(DefaultEigenSystem.class.getName())) {
         	Log.warning.println("WARNING: eigenSystemClass is DefautlEigneSystem, which may cause trouble with asymtric analysis. "
         			+ "You may want to consider eigensystem='beast.evolution.substitutionmodel.RobustEigenSystem' instead.");
         }
-        //try {
-			eigenSystem = createEigenSystem();
-		//} catch (SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
-		//		| InvocationTargetException e) {
-		//	throw new IllegalArgumentException(e);
-		//}
-        
-//        if (robust.get()){
-//            eigenSystem = new RobustEigenSystem(m_nStates);
-//        }   else {
-//            eigenSystem = new DefaultEigenSystem(m_nStates);
-//        }
-        
+
+        eigenSystem = createEigenSystem();
         rateMatrix = new double[nrOfStates][nrOfStates];
         relativeRates = new double[ratesInput.get().getDimension()];
         storedRelativeRates = new double[ratesInput.get().getDimension()];
@@ -103,70 +94,6 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
         updateMatrix = true;
     }
 
-    // **************************************************************
-    // Loggable IMPLEMENTATION
-    // **************************************************************
-
-//    @Override
-//    public void getTransitionProbabilities(Node node, double fStartTime, double fEndTime, double fRate, double[] matrix) {
-//        double distance = (fStartTime - fEndTime) * fRate;
-//
-//        int i, j, k;
-//        double temp;
-//
-//        // this must be synchronized to avoid being called simultaneously by
-//        // two different likelihood threads - AJD
-//        synchronized (this) {
-//            if (updateMatrix) {
-//                setupRelativeRates();
-//                setupRateMatrix();
-//                try{
-//                    eigenDecomposition = eigenSystem.decomposeMatrix(rateMatrix);
-//                }catch(Exception e){
-//                    updateMatrix = false;
-//                    Arrays.fill(matrix, 0);
-//                    return;
-//
-//                }
-//                updateMatrix = false;
-//            }
-//        }
-//
-//        // is the following really necessary?
-//        // implemented a pool of iexp matrices to support multiple threads
-//        // without creating a new matrix each call. - AJD
-//        // a quick timing experiment shows no difference - RRB
-//        double[] iexp = new double[nrOfStates * nrOfStates];
-//        // Eigen vectors
-//        double[] Evec = eigenDecomposition.getEigenVectors();
-//        // inverse Eigen vectors
-//        double[] Ievc = eigenDecomposition.getInverseEigenVectors();
-//        // Eigen values
-//        double[] Eval = eigenDecomposition.getEigenValues();
-//        for (i = 0; i < nrOfStates; i++) {
-//            temp = Math.exp(distance * Eval[i]);
-//            for (j = 0; j < nrOfStates; j++) {
-//                iexp[i * nrOfStates + j] = Ievc[i * nrOfStates + j] * temp;
-//            }
-//        }
-//
-//        int u = 0;
-//        for (i = 0; i < nrOfStates; i++) {
-//            for (j = 0; j < nrOfStates; j++) {
-//                temp = 0.0;
-//                for (k = 0; k < nrOfStates; k++) {
-//                    temp += Evec[i * nrOfStates + k] * iexp[k * nrOfStates + j];
-//                }
-//
-//                matrix[u] = Math.abs(temp);
-//                u++;
-//            }
-//        }
-//        int h = 3;
-//        h++;
-//    } // getTransitionProbabilities
-
-
     private double[] probability = null;
 
     @Override
@@ -181,30 +108,36 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
     /** sets up rate matrix **/
     @Override
     public void setupRateMatrix() {
-    	if (!isSymmetricInput.get()) {
-    		super.setupRateMatrix();
-    		return;
-    	}
         double [] fFreqs = frequencies.getFreqs();
-        int count = 0;
-        for (int i = 0; i < nrOfStates; i++) {
-            rateMatrix[i][i] = 0;
-            for (int j = i+1; j <  nrOfStates; j++) {
-                rateMatrix[i][j] = relativeRates[count];
-               	rateMatrix[j][i] = relativeRates[count];
-                count++;
+        if (isSymmetricInput.get()) {
+            int count = 0;
+            for (int i = 0; i < nrOfStates; i++) {
+                rateMatrix[i][i] = 0;
+                for (int j = i+1; j < nrOfStates; j++) {
+                    rateMatrix[i][j] = relativeRates[count];
+                    rateMatrix[j][i] = relativeRates[count];
+                    count++;
+                }
             }
-//             for (int j = i+1; j < m_nStates; j++) {
-//                 m_rateMatrix[i][j] = relativeRates[i * (m_nStates -1) + j-1];
-//             }
-        }
-        // bring in frequencies
-        for (int i = 0; i < nrOfStates; i++) {
-            for (int j = i + 1; j < nrOfStates; j++) {
-                rateMatrix[i][j] *= fFreqs[j];
-                rateMatrix[j][i] *= fFreqs[i];
+            // bring in frequencies
+            for (int i = 0; i < nrOfStates; i++) {
+                for (int j = i + 1; j < nrOfStates; j++) {
+                    rateMatrix[i][j] *= fFreqs[j];
+                    rateMatrix[j][i] *= fFreqs[i];
+                }
+            }
+    	} else {
+            for (int i = 0; i < nrOfStates; i++) {
+                rateMatrix[i][i] = 0;
+                for (int j = 0; j < i; j++) {
+                    rateMatrix[i][j] = relativeRates[i * (nrOfStates - 1) + j];
+                }
+                for (int j = i + 1; j < nrOfStates; j++) {
+                    rateMatrix[i][j] = relativeRates[i * (nrOfStates - 1) + j - 1];
+                }
             }
         }
+
         // set up diagonal
         for (int i = 0; i < nrOfStates; i++) {
             double fSum = 0.0;
@@ -214,10 +147,16 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
             }
             rateMatrix[i][i] = -fSum;
         }
+
         // normalise rate matrix to one expected substitution per unit time
+        double[] f;
+        if (!isSymmetric) {
+            // compute equilibrium frequencies if nonreversible
+            f = getEquilibriumFrequencies(rateMatrix);
+        } else f = fFreqs;
         double fSubst = 0.0;
         for (int i = 0; i < nrOfStates; i++)
-            fSubst += -rateMatrix[i][i] * fFreqs[i];
+            fSubst += -rateMatrix[i][i] * f[i];
 
         for (int i = 0; i < nrOfStates; i++) {
             for (int j = 0; j < nrOfStates; j++) {
@@ -229,26 +168,6 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
 
     @Override
     protected boolean requiresRecalculation() {
-    	// if the rate is only dirty for a value that the indicators block out,
-    	// no recalculation is required, so check this first.
-//    	Function v = ratesInput.get();
-//    	if (v instanceof Parameter<?>) {
-//    		Parameter.Base<?> p = (Parameter.Base<?>) v;
-//    		if (p.somethingIsDirty()) {
-//    			if (frequencies.isDirtyCalculation()) {
-//			    	return super.requiresRecalculation();
-//    			}
-//        		Parameter<Boolean> indicator2 = indicator.get();
-//    			for (int i = 0; i < p.getDimension(); i++) {
-//    				if (indicator2.getValue(i) && p.isDirty(i)) {
-//    			    	return super.requiresRecalculation();
-//    				}
-//    			}
-//    			// no calculation is affected
-//    			return false;
-//    		}
-//    	}
-
     	return super.requiresRecalculation();
     }
     
@@ -263,6 +182,69 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
             Arrays.fill(matrix, 0.0);
         }
 
+    }
+
+    private double[] getEquilibriumFrequencies(double[][] Qm) {
+        double temp;
+
+        EigenDecomposition decomposition = eigenSystem.decomposeMatrix(Qm);
+        double[] Eval = decomposition.getEigenValues();
+        double[] evec = decomposition.getEigenVectors();
+        double[] ievc = decomposition.getInverseEigenVectors();
+
+        double[][] iexp = new double[nrOfStates][nrOfStates];
+        double[] EvalImag = new double[nrOfStates];
+        double[][] transProbs = new double[nrOfStates][nrOfStates];
+
+        System.arraycopy(Eval, nrOfStates, EvalImag, 0, nrOfStates);
+        for (int i = 0; i < nrOfStates; i++) {
+            if (EvalImag[i] == 0) {
+                // 1x1 block
+                temp = Math.exp(BRANCH_LENGTH * Eval[i]);
+                for (int j = 0; j < nrOfStates; j++) {
+                    iexp[i][j] = ievc[i * nrOfStates + j] * temp;
+                }
+            } else {
+                // 2x2 conjugate block
+                // If A is 2x2 with complex conjugate pair eigenvalues a +/- bi, then
+                // exp(At) = exp(at)*( cos(bt)I + \frac{sin(bt)}{b}(A - aI)).
+                int i2 = i + 1;
+                double b = EvalImag[i];
+                double expat = Math.exp(BRANCH_LENGTH * Eval[i]);
+                double expatcosbt = expat * Math.cos(BRANCH_LENGTH * b);
+                double expatsinbt = expat * Math.sin(BRANCH_LENGTH * b);
+
+                for (int j = 0; j < nrOfStates; j++) {
+                    iexp[i][j] = expatcosbt * ievc[i * nrOfStates + j] +
+                            expatsinbt * ievc[i2 * nrOfStates + j];
+                    iexp[i2][j] = expatcosbt * ievc[i2 * nrOfStates + j] -
+                            expatsinbt * ievc[i * nrOfStates + j];
+                }
+                i++; // processed two conjugate rows
+            }
+        }
+
+        for (int i = 0; i < nrOfStates; i++) {
+            for (int j = 0; j < nrOfStates; j++) {
+                temp = 0.0;
+                for (int k = 0; k < nrOfStates; k++) {
+                    temp += evec[i * nrOfStates + k] * iexp[k][j];
+                }
+                transProbs[i][j] = Math.abs(temp);
+            }
+        }
+        double[] freqs = new double[transProbs.length];
+        for (int i = 0; i < freqs.length; i++) {
+            freqs[i] = transProbs[0][i];
+            for (int j = 1; j < freqs.length; j++) {
+//                if (Math.abs(transProbs[0][i] - transProbs[j][i]) > 1e-6) {
+//                    System.out.println("WARNING: branch length used to get equilibrium distribution was not long enough!");
+//                    break;
+//                }
+
+            }
+        }
+        return freqs;
     }
 
 }
