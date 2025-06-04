@@ -42,9 +42,9 @@ public class SVSPrior extends Distribution {
             logP += indicators[i] ? Math.log(p[i]) : Math.log(1-p[i]);
         }
 
-        int numStates;
-        if (sym) numStates = (int) Math.abs((-1 - Math.sqrt(1+8*rates.length))/2);
-        else numStates = (int) Math.abs((-1 - Math.sqrt(1+4*rates.length))/2);
+        int nrOfStates;
+        if (sym) nrOfStates = (int) Math.abs((-1 - Math.sqrt(1+8*rates.length))/2);
+        else nrOfStates = (int) Math.abs((-1 - Math.sqrt(1+4*rates.length))/2);
 
         int sum = 0;
         for (int i = 0; i < indicators.length; i ++) {
@@ -52,7 +52,7 @@ public class SVSPrior extends Distribution {
                 sum ++;
             }
         }
-        if (sum < numStates)
+        if (sum < nrOfStates)
             return Double.NEGATIVE_INFINITY;
 
         Double[] indicatorValues = new Double[indicators.length];
@@ -60,7 +60,7 @@ public class SVSPrior extends Distribution {
             indicatorValues[i] = indicators[i] ? 1.0 : 0.0;
         }
         if (!AbyssSVS.Utils.connectedAndWellConditioned(p) ||
-                !AbyssSVS.Utils.isStronglyConnected(indicatorValues, numStates, sym))
+                !AbyssSVS.Utils.isStronglyConnected(indicatorValues, nrOfStates, sym))
             return Double.NEGATIVE_INFINITY;
 
         return logP;
