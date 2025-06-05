@@ -4,7 +4,6 @@ import beast.base.core.*;
 import beast.base.inference.CalculationNode;
 
 import java.io.PrintStream;
-import java.util.List;
 
 @Description("Equilibrium frequency logger")
 public class ABySSFrequencyLogger extends CalculationNode implements Loggable, Function {
@@ -25,7 +24,7 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
 
     public void init(PrintStream out) {
         // substModel + freq + state name of j = param name
-        String id = "substModelFreq.";
+        String id = "freq.";
         String stateName;
 
         for (int i = 0; i < this.model.getStateCount(); i++) {
@@ -36,22 +35,23 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
     }
 
     public void log(long sample, PrintStream out) {
+        double[] p = getDoubleValues();
         for (int i = 0; i < this.model.getStateCount(); i++) {
-            out.print(getArrayValue(i) + "\t");
+            out.print(p[i] + "\t");
         }
 
     }
 
-    private double getFrequency(ABySSubstitutionModel model, int dim) {
+    private double[] getFrequencies(ABySSubstitutionModel model) {
         int numStates = model.getStateCount();
         double[] p = new double[numStates*numStates];
-        model.getTransitionProbabilities(null, 1.0, 0., 100000, p);
+        model.getTransitionProbabilities(null, 1.0, 0., 1000000, p);
         for (int i = 0; i+1 < numStates; i++) {
             for (int j = 0; j < numStates; j++) {
                 if (p[i*numStates + j] - p[(i+1)*numStates + j] > 1e-12) throw new ArithmeticException("Did not reach equilibrium");
             }
         }
-        return p[dim];
+        return p;
     }
 
     public void close(PrintStream close) {
@@ -63,7 +63,12 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
     }
 
     @Override
+    public double[] getDoubleValues() {
+        return getFrequencies(this.model);
+    }
+
+    @Override
     public double getArrayValue(int dim) {
-        return getFrequency(this.model, dim);
+        return getDoubleValues()[dim];
     }
 }
