@@ -23,20 +23,26 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
     public ABySSubstitutionModel generatorToBEAST(NonReversible nq, BEASTInterface value, BEASTContext context) {
 
         ABySSubstitutionModel beastNQ = new ABySSubstitutionModel();
+        int numStates;
 
-        Value<Double[]> rates = nq.getRates();
-        Value<Double[]> freqs = nq.getFreq();
-        Value<Boolean[]> indicators = nq.getIndicators();
         Value<Boolean> symmetric = nq.getSymmetric();
-
-        int numStates = freqs.value().length;
-
+        Value<Double[]> rates = nq.getRates();
         RealParameter ratesParameter = (RealParameter)context.getBEASTObject(rates);
-        RealParameter freqParameter = (RealParameter)context.getBEASTObject(freqs);
-        BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
+
+        RealParameter freqParameter;
+        if (symmetric.value()) {
+            Value<Double[]> freqs = nq.getFreq();
+            freqParameter = (RealParameter)context.getBEASTObject(freqs);
+            numStates = freqs.value().length;
+            char[] states = getStateNames(context, numStates);
+            String stateNames = new String(states).replace("", " ").trim();
+            beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
+        } else {
+            double root = (-1 - Math.sqrt(1+4* rates.value().length))/2;
+            numStates = (int) Math.abs(root);
+        }
 
         char[] states = getStateNames(context, numStates);
-        String stateNames = new String(states).replace("", " ").trim();
         String keys = getRateKeys(states, numStates, symmetric.value());
 
         String[] statesList = new String[states.length];
@@ -46,17 +52,20 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
 
         ratesParameter.setInputValue("keys", keys);
         ratesParameter.initAndValidate();
-        rateIndicatorParameter.setInputValue("keys", keys);
-        rateIndicatorParameter.initAndValidate();
-        //TODO add bitflip operator spec: uniform=false
+
+        if (nq.getIndicators() != null) {
+            Value<Boolean[]> indicators = nq.getIndicators();
+            BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
+            rateIndicatorParameter.setInputValue("keys", keys);
+            rateIndicatorParameter.initAndValidate();
+            beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
+        } //TODO add bitflip operator spec: uniform=false
 
         List<Transform> rateTransforms = new ArrayList<>();
         rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
         addAVMNOperator(context, rateTransforms, 10.0, "rates");
 
         beastNQ.setInputValue("rates", ratesParameter);
-        beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
-        beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
         beastNQ.setInputValue("symmetric", symmetric.value());
         beastNQ.initAndValidate();
         addFreqLogger(context, beastNQ, statesList);
