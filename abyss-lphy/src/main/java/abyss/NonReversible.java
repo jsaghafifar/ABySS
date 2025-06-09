@@ -18,7 +18,7 @@ public class NonReversible extends RateMatrix {
     protected static final String freqParamName = SubstModelParamNames.FreqParamName;
     public static final String symmetricParamName = "symmetric";
 
-    private static final double DEFAULT_BRANCH_LENGTH = 10000;
+    private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
     public NonReversible(@ParameterInfo(name = ratesParamName, narrativeName = "relative rates", description = "the relative rates of the substitution process.") Value<Double[]> rates,
                          @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.", optional = true) Value<Double[]> freq,

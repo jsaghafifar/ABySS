@@ -11,6 +11,7 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
     final public Input<String[]> keysInput;
     protected ABySSubstitutionModel model;
     protected String[] keys;
+    private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
     public ABySSFrequencyLogger() {
         this.modelInput = new Input("model", "ABYSS SVS general substitution model.", Input.Validate.REQUIRED);
@@ -43,15 +44,30 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
     }
 
     private double[] getFrequencies(ABySSubstitutionModel model) {
-        int numStates = model.getStateCount();
-        double[] p = new double[numStates*numStates];
-        model.getTransitionProbabilities(null, 1.0, 0., 1000000, p);
-        for (int i = 0; i+1 < numStates; i++) {
-            for (int j = 0; j < numStates; j++) {
-                if (p[i*numStates + j] - p[(i+1)*numStates + j] > 1e-12) throw new ArithmeticException("Did not reach equilibrium");
+        int nrOfStates = model.getStateCount();
+        double t = DEFAULT_BRANCH_LENGTH;
+        boolean equilibrium = false;
+        double[] p;
+        double[] f = new double[nrOfStates];
+
+        while (!equilibrium) {
+            p = new double[nrOfStates * nrOfStates];
+            model.getTransitionProbabilities(null, 1.0, 0., t, p);
+            boolean reached = true;
+            for (int i = 0; i < nrOfStates; i++) {
+                f[i] = p[i];
+                for (int j = 1; j < nrOfStates; j++) {
+                    if (p[i] - p[j * nrOfStates + i] > 1e-6) {
+                        reached = false;
+                        break;
+                    }
+                }
+                if (!reached) break;
             }
+            if (reached) equilibrium = true;
+            t *= 10;
         }
-        return p;
+        return f;
     }
 
     public void close(PrintStream close) {

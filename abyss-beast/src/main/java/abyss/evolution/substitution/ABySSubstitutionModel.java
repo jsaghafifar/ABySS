@@ -39,7 +39,7 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
 
     private BooleanParameter rateIndicator;
     private boolean isSymmetric = false;
-    private static final double DEFAULT_BRANCH_LENGTH = 10000;
+    private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
     @Override
     public void initAndValidate(){
