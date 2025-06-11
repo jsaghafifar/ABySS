@@ -84,7 +84,7 @@ public class SVSPrior extends Distribution {
     @Override
     public void initAndValidate() {
         if (indicatorsInput.get().getDimension() != empiricalRatesInput.get().getDimension()) {
-            throw new RuntimeException("Indicators must be same size as empirical rates parameter but it was dimension " + empiricalRatesInput.get().getDimension());
+            throw new RuntimeException("Indicators must be same size as empirical rates parameter but it was dimension " + indicatorsInput.get().getDimension());
         }
     }
 }
