@@ -1,5 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
+import abyss.distributions.EigenFriendlyQPrior;
 import abyss.evolution.substitution.ABySSFrequencyLogger;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Function;
@@ -39,7 +40,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
         } else {
             double root = (-1 - Math.sqrt(1+4* rates.value().length))/2;
-            numStates = (int) Math.abs(root);
+            numStates = (int) Math.abs(root); // TODO add optional numStates param to lphy and beast classes?
         }
 
         char[] states = getStateNames(context, numStates);
@@ -56,10 +57,12 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         if (nq.getIndicators() != null) {
             Value<Boolean[]> indicators = nq.getIndicators();
             BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
+            createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates);
             rateIndicatorParameter.setInputValue("keys", keys);
             rateIndicatorParameter.initAndValidate();
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
-        } //TODO add bitflip operator spec: uniform=false
+        } else createEigenFriendlyQPrior(context, ratesParameter, null, numStates);
+        //TODO add bitflip operator spec: uniform=false
 
         List<Transform> rateTransforms = new ArrayList<>();
         rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
@@ -102,10 +105,21 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
     private void addFreqLogger(BEASTContext context, ABySSubstitutionModel model, String[] keys) {
         ABySSFrequencyLogger frequencyLogger = new ABySSFrequencyLogger();
         frequencyLogger.setInputValue("model", model);
-//        frequencyLogger.setInputValue("keys", keys);
+//        frequencyLogger.setInputValue("keys", keys); // TODO fix keys for freq logger
         frequencyLogger.initAndValidate();
 
         context.addExtraLoggable(frequencyLogger);
+    }
+
+    private void createEigenFriendlyQPrior(BEASTContext context, RealParameter rates, BooleanParameter indicators, Integer numStates) {
+        EigenFriendlyQPrior qPrior = new EigenFriendlyQPrior();
+        qPrior.setInputValue("rates", rates);
+        if (indicators != null) {
+            qPrior.setInputValue("rateIndicator", indicators);
+        }
+        qPrior.setInputValue("nrOfStates", numStates);
+        qPrior.initAndValidate();
+        //context.add?; // TODO fix so goes in XML right
     }
 
     private char[] getStateNames(BEASTContext context, int numStates) {
