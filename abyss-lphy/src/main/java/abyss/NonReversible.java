@@ -72,6 +72,23 @@ public class NonReversible extends RateMatrix {
     @Override
     public boolean canReturnComplexDiagonalization() { return !getSymmetric().value(); }
 
+    private static void setupUnnormNonrevQ(Double[][] Q, Double[] r, Boolean[] b, int numStates) {
+        int x = 0;
+        for (int i = 0; i < numStates; i++) {
+            Q[i][i] = 0.0;
+            for (int j = 0; j < i; j++) {
+                Q[i][j] = b[x] ? r[x] : Double.valueOf(0.0);
+                Q[i][i] -= Q[i][j];
+                x++;
+            }
+            for (int j = i + 1; j < numStates; j++) {
+                Q[i][j] = b[x] ? r[x] : Double.valueOf(0.0);
+                Q[i][i] -= Q[i][j];
+                x++;
+            }
+        }
+    }
+
     protected Double[][] getQ() {
         int numStates = getNumStates(getRates(), getSymmetric());
         Double[] r = getRates().value();
@@ -82,26 +99,14 @@ public class NonReversible extends RateMatrix {
 
         Boolean sym = getSymmetric().value();
 
-        Double[] f = new Double[numStates];
+        Double[] f;
         Double[][] Q = new Double[numStates][numStates];
-        int x = 0;
         if (!sym) {
-            for (int i = 0; i < numStates; i++) {
-                Q[i][i] = 0.0;
-                for (int j = 0; j < i; j++) {
-                    Q[i][j] = b[x] ? r[x] : Double.valueOf(0.0);
-                    Q[i][i] -= Q[i][j];
-                    x++;
-                }
-                for (int j = i + 1; j < numStates; j++) {
-                    Q[i][j] = b[x] ? r[x] : Double.valueOf(0.0);
-                    Q[i][i] -= Q[i][j];
-                    x++;
-                }
-            }
-            f = getEquilibriumFrequencies(numStates, Q);
+            setupUnnormNonrevQ(Q, r, b, numStates);
+            f = getEquilibriumFrequencies(Q, numStates);
         } else {
             f = getFreq().value();
+            int x = 0;
             for (int i = 0; i < numStates; i++) {
                 Q[i][i] = 0.0;
                 for (int j = i + 1; j < numStates; j++) {
@@ -146,7 +151,7 @@ public class NonReversible extends RateMatrix {
         return Q;
     }
 
-    private Double[] getEquilibriumFrequencies(int numStates, Double[][] Qm) {
+    private Double[] getEquilibriumFrequencies(Double[][] Qm, int numStates) {
         double temp;
 
         EigenSystem complexEigenSystem = new ComplexColtEigenSystem(numStates);
