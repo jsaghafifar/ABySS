@@ -24,7 +24,7 @@ import java.util.Arrays;
 @Description("ABySS ver SVS General Substitution Model")
 public class ABySSubstitutionModel extends ComplexSubstitutionModel implements AbyssSVS {
 
-    public Input<BooleanParameter> indicator = new Input<BooleanParameter>("rateIndicator",
+    public Input<BooleanParameter> indicatorsInput = new Input<BooleanParameter>("rateIndicator",
             "rates to indicate the presence or absence of transition matrix entries", Validate.OPTIONAL);
 
     public Input<Boolean> isSymmetricInput = new Input<Boolean>("symmetric",
@@ -42,14 +42,15 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
 
     @Override
     public void initAndValidate(){
-        if (indicator.get() != null) {
-            rateIndicator = indicator.get();
+        if (indicatorsInput.get() != null) {
+            rateIndicator = indicatorsInput.get();
 
-            if (indicator.get().getDimension() != ratesInput.get().getDimension())
+            if (indicatorsInput.get().getDimension() != ratesInput.get().getDimension())
                 throw new IllegalArgumentException("Dimension of inputs 'rates' and 'rateIndicator' must match.");
         }
 
         if (isSymmetricInput.get()) {
+            isSymmetric = true;
             frequencies = frequenciesInput.get();
             nrOfStates = frequencies.getFreqs().length;
 
@@ -97,13 +98,35 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
     @Override
     public void setupRelativeRates() {
         Function rates = this.ratesInput.get();
-        if (this.indicator.get() != null) {
+        if (this.indicatorsInput.get() != null) {
             for (int i = 0; i < relativeRates.length; i++) {
                 relativeRates[i] = rates.getArrayValue(i) * (rateIndicator.getValue(i)?1.:0.);
             }
         } else for (int i = 0; i < relativeRates.length; i++) {
             relativeRates[i] = rates.getArrayValue(i);
         }
+    }
+
+    public static double[][] setupUnnormNonrevQ(double[] relativeRates, int nrOfStates) {
+        double[][] Qm = new double[nrOfStates][nrOfStates];
+        for (int i = 0; i < nrOfStates; i++) {
+            Qm[i][i] = 0;
+            for (int j = 0; j < i; j++) {
+                Qm[i][j] = relativeRates[i * (nrOfStates - 1) + j];
+            }
+            for (int j = i + 1; j < nrOfStates; j++) {
+                Qm[i][j] = relativeRates[i * (nrOfStates - 1) + j - 1];
+            }
+        }
+        for (int i = 0; i < nrOfStates; i++) {
+            double fSum = 0.0;
+            for (int j = 0; j < nrOfStates; j++) {
+                if (i != j)
+                    fSum += Qm[i][j];
+            }
+            Qm[i][i] = -fSum;
+        }
+        return Qm;
     }
 
     /** sets up rate matrix **/
@@ -128,29 +151,19 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
                     rateMatrix[j][i] *= f[i];
                 }
             }
-    	} else { // nonreversible Q mat not constructed from freqs
-            f = new double[nrOfStates];
+            // set up diagonal
             for (int i = 0; i < nrOfStates; i++) {
-                rateMatrix[i][i] = 0;
-                for (int j = 0; j < i; j++) {
-                    rateMatrix[i][j] = relativeRates[i * (nrOfStates - 1) + j];
+                double fSum = 0.0;
+                for (int j = 0; j < nrOfStates; j++) {
+                    if (i != j)
+                        fSum += rateMatrix[i][j];
                 }
-                for (int j = i + 1; j < nrOfStates; j++) {
-                    rateMatrix[i][j] = relativeRates[i * (nrOfStates - 1) + j - 1];
-                }
+                rateMatrix[i][i] = -fSum;
             }
+    	} else { // nonreversible Q mat not constructed from freqs
+            rateMatrix = setupUnnormNonrevQ(relativeRates, nrOfStates);
+            f = getEquilibriumFrequencies(rateMatrix);
         }
-
-        // set up diagonal
-        for (int i = 0; i < nrOfStates; i++) {
-            double fSum = 0.0;
-            for (int j = 0; j < nrOfStates; j++) {
-                if (i != j)
-                    fSum += rateMatrix[i][j];
-            }
-            rateMatrix[i][i] = -fSum;
-        }
-        if (!isSymmetricInput.get()) f = this.getFrequencies();
 
         // normalise rate matrix to one expected substitution per unit time
         double fSubst = 0.0;
@@ -172,7 +185,7 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
     
     @Override
     public boolean canReturnComplexDiagonalization() {
-    	return !isSymmetric;
+    	return !isSymmetricInput.get();
     }
 
     @Override
@@ -185,26 +198,9 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
 
     @Override
     public double[] getFrequencies() {
-        if (!isSymmetric) {
+        if (!isSymmetricInput.get()) {
             setupRelativeRates();
-            double[][] Qm = new double[nrOfStates][nrOfStates];
-            for (int i = 0; i < nrOfStates; i++) {
-                Qm[i][i] = 0;
-                for (int j = 0; j < i; j++) {
-                    Qm[i][j] = relativeRates[i * (nrOfStates - 1) + j];
-                }
-                for (int j = i + 1; j < nrOfStates; j++) {
-                    Qm[i][j] = relativeRates[i * (nrOfStates - 1) + j - 1];
-                }
-            }
-            for (int i = 0; i < nrOfStates; i++) {
-                double fSum = 0.0;
-                for (int j = 0; j < nrOfStates; j++) {
-                    if (i != j)
-                        fSum += Qm[i][j];
-                }
-                Qm[i][i] = -fSum;
-            }
+            double[][] Qm = setupUnnormNonrevQ(relativeRates, nrOfStates);
             return getEquilibriumFrequencies(Qm);
         }
         return this.frequencies.getFreqs();
