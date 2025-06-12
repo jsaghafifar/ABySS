@@ -32,7 +32,7 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
     @Override
     public List<Class<? extends GeneratorToBEAST>> getGeneratorToBEASTs() {
         return Arrays.asList( NonReversibleToBEAST.class, NQPFAMToBEAST.class,
-                InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class, EigenFriendlyQToBEAST.class );
+                InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class );
     }
 
     // LPhy SequenceType => BEAST DataType

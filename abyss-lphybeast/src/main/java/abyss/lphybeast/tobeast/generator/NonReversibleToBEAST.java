@@ -111,7 +111,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         context.addExtraLoggable(frequencyLogger);
     }
 
-    private void createEigenFriendlyQPrior(BEASTContext context, RealParameter rates, BooleanParameter indicators, Integer numStates) {
+    private void createEigenFriendlyQPrior(BEASTContext context, Function rates, BooleanParameter indicators, Integer numStates) {
         EigenFriendlyQPrior qPrior = new EigenFriendlyQPrior();
         qPrior.setInputValue("rates", rates);
         if (indicators != null) {
@@ -119,7 +119,9 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         }
         qPrior.setInputValue("nrOfStates", numStates);
         qPrior.initAndValidate();
-        //context.add?; // TODO fix so goes in XML right
+        qPrior.setID("eigenfriendlyQ.prior");
+        context.addBEASTObject(qPrior, null);
+
     }
 
     private char[] getStateNames(BEASTContext context, int numStates) {
