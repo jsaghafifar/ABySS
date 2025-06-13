@@ -31,7 +31,9 @@ public class EigenFriendlyQPrior extends Distribution {
     protected EigenSystem eigenSystem;
 
 
+    @Override
     public double calculateLogP() {
+        logP = 0.0;
         Function rates = this.ratesInput.get();
         nrOfStates = this.nrOfStatesInput.get();
         double[] relativeRates = new double[rates.getDimension()];
@@ -46,9 +48,9 @@ public class EigenFriendlyQPrior extends Distribution {
         Qm = setupUnnormNonrevQ(relativeRates, nrOfStates);
         eigenSystem = new ColtEigenSystem(nrOfStates);
         try { eigenSystem.decomposeMatrix(Qm); } catch (Exception exception) {
-            return Double.NEGATIVE_INFINITY;
+            logP = Double.NEGATIVE_INFINITY;
         }
-        return 0.0;
+        return logP;
     }
 
     @Override
