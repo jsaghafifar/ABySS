@@ -7,8 +7,10 @@ import beast.base.evolution.substitutionmodel.EigenSystem;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.inference.parameter.BooleanParameter;
+import beast.base.inference.parameter.RealParameter;
 import jdk.jfr.Description;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -51,12 +53,18 @@ public class EigenFriendlyQPrior extends Distribution {
 
     @Override
     public List<String> getArguments() {
-        return null;
+        List<String> args = new ArrayList<>();
+        args.add(((RealParameter)ratesInput.get()).getID());
+        if (indicatorsInput.get() != null) {
+            args.add((indicatorsInput.get().getID()));
+        }
+        return args;
     }
 
     @Override
     public List<String> getConditions() {
-        return null;
+        List<String> conds = new ArrayList<>();
+        return conds;
     }
 
     @Override

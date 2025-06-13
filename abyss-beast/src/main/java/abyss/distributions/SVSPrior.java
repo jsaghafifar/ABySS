@@ -9,6 +9,7 @@ import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import org.apache.commons.math3.util.FastMath;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -18,7 +19,7 @@ public class SVSPrior extends Distribution {
 
     final public Input<RealParameter> scaleInput = new Input<>("scale", "probability scale parameter.", Input.Validate.REQUIRED);
     final public Input<RealParameter> shapeInput = new Input<>("shape", "probability shape parameter.", Input.Validate.REQUIRED);
-    final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.");
+    final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.", Input.Validate.REQUIRED);
     final public Input<RealParameter> empiricalRatesInput = new Input<>("rates", "rates informing bernoulli trials", Input.Validate.REQUIRED);
     final public Input<Boolean> isSymmetricInput = new Input<>("symmetric", "whether rates come from symmetric matrix", Input.Validate.REQUIRED);
 
@@ -68,12 +69,19 @@ public class SVSPrior extends Distribution {
 
     @Override
     public List<String> getArguments() {
-        return null;
+        List<String> args = new ArrayList<>();
+        args.add(indicatorsInput.get().getID());
+        return args;
     }
 
     @Override
     public List<String> getConditions() {
-        return null;
+        List<String> conds = new ArrayList<>();
+        conds.add(scaleInput.get().getID());
+        conds.add(shapeInput.get().getID());
+        conds.add(empiricalRatesInput.get().getID());
+//        conds.add(String.valueOf(isSymmetricInput.get())); // TODO check is right?
+        return conds;
     }
 
     @Override
