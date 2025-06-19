@@ -7,6 +7,7 @@
         <provider classname="abyss.distributions.SVSPrior"/>
         <provider classname="abyss.evolution.substitution.ABySSubstitutionModel"/>
         <provider classname="abyss.evolution.substitution.ABySSFrequencyLogger"/>
+        <provider classname="abyss.evolution.substitution.ABySSModelAveraging"/>
         <provider classname="abyss.distributions.InformedDirichletPrior"/>
         <provider classname="abyss.distributions.EigenFriendlyQPrior"/>
         <provider classname="abyss.inference.AbyssSVS"/>
