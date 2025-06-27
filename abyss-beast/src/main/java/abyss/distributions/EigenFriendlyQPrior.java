@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static abyss.evolution.substitution.ABySSubstitutionModel.setupUnnormNonrevQ;
+import static abyss.substitutionmodel.ABySSubstitutionModel.setupUnnormNonrevQ;
 
 @Description("Check can converge, reject proposed Q matrix otherwise")
 public class EigenFriendlyQPrior extends Distribution {

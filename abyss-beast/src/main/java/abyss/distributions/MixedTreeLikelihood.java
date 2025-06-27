@@ -1,7 +1,7 @@
 package abyss.distributions;
 
 
-import abyss.evolution.substitution.ABySSModelAveraging;
+import abyss.substitutionmodel.ABySSModelAveraging;
 import beast.base.core.*;
 import beast.base.evolution.likelihood.TreeLikelihood;
 import beast.base.evolution.substitutionmodel.GeneralSubstitutionModel;

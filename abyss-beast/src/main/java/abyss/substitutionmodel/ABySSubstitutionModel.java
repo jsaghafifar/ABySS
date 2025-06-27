@@ -1,4 +1,4 @@
-package abyss.evolution.substitution;
+package abyss.substitutionmodel;
 
 
 import beast.base.core.Description;
