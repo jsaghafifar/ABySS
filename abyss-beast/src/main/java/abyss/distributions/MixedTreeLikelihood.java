@@ -65,12 +65,7 @@ public class MixedTreeLikelihood extends TreeLikelihood {
 
         for (int i = 0; i < pLikelihoods.get().size(); i++) {
             TreeLikelihood likelihood = pLikelihoods.get().get(i);
-            double p;
-            if (likelihood.isDirtyCalculation()) {
-                p = likelihood.calculateLogP();
-            } else {
-                p = likelihood.getCurrentLogP();
-            }
+            double p = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
             if (Double.isInfinite(p) || Double.isNaN(p)) {
                 logP += p;
                 return logP;
