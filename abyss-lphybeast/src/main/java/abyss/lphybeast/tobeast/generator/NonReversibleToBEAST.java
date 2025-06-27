@@ -1,14 +1,14 @@
 package abyss.lphybeast.tobeast.generator;
 
 import abyss.distributions.EigenFriendlyQPrior;
-import abyss.evolution.substitution.ABySSFrequencyLogger;
+import abyss.substitutionmodel.ABySSFrequencyLogger;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
 import beast.base.inference.operator.kernel.Transform;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
-import abyss.evolution.substitution.ABySSubstitutionModel;
+import abyss.substitutionmodel.ABySSubstitutionModel;
 import abyss.NonReversible;
 import jebl.evolution.sequences.SequenceType;
 import lphy.base.evolution.likelihood.PhyloCTMC;
