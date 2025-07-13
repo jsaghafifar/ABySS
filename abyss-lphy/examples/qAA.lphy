@@ -1,0 +1,9 @@
+λ ~ LogNormal(meanlog=3, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=16);
+rates ~ Dirichlet(conc=rep(1.0,190)); 
+freq = [0.05,0.05,0.05,0.05,0.05,
+	0.05,0.05,0.05,0.05,0.05,
+	0.05,0.05,0.05,0.05,0.05,
+	0.05,0.05,0.05,0.05,0.05];
+Q = nonReversible(rates=rates, freq=freq, symmetric=true);
+D ~ PhyloCTMC(L=200, Q=Q, tree=ψ, dataType=aminoAcids());

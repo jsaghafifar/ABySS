@@ -1,0 +1,5 @@
+λ ~ LogNormal(meanlog=3, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=16);
+rates ~ Dirichlet(conc=rep(1.0,12));
+Q = nonReversible(rates=rates);
+D ~ PhyloCTMC(L=200, Q=Q, tree=ψ);
