@@ -261,7 +261,7 @@ name="alignment">
                     </LaplaceDistribution>                                
                 </prior>
             </distribution>
-            <distribution id="mixedLikelihood.RSV2" spec="abyss.distributions.MixedTreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
+            <distribution id="likelihood" spec="abyss.distributions.MixedTreeLikelihood">
                 <likelihood id="treeLikelihood0.RSV2" spec="TreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
 
                     <siteModel id="SiteModel0.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2">
@@ -407,7 +407,9 @@ name="alignment">
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
-            <log idref="treeLikelihood.RSV2"/>
+            <log idref="treeLikelihood0.RSV2"/>
+            <log idref="treeLikelihood1.RSV2"/>
+            <log idref="treeLikelihood2.RSV2"/>
             <log id="TreeHeight.t:RSV2" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:RSV2"/>
             <log idref="clockRate.c:RSV2"/>
             <log idref="gammaShape.s:RSV2"/>
@@ -418,7 +420,7 @@ name="alignment">
             <log idref="rateAT.s:RSV2"/>
             <log idref="rateCG.s:RSV2"/>
             <log idref="rateGT.s:RSV2"/>
-            <log id="NQfreq.s:RSV2" spec="abyss.evolution.substitution.ABySSFrequencyLogger" model="@subst0"/>
+            <log id="NQfreq.s:RSV2" spec="abyss.substitutionmodel.ABySSFrequencyLogger" model="@subst0.s:RSV2"/>
             <log idref="Qfreq.s:RSV2"/>
             <log idref="CoalescentExponential.t:RSV2"/>                    
             <log idref="ePopSize.t:RSV2"/>                    
