@@ -330,6 +330,12 @@
         <zip destfile="${dist}/${fullName}.zip" basedir="${pack}" />
 
         <delete dir="${pack}"/>
+        <delete dir="${build}" />
+        <delete dir="${build-beast}" />
+        <delete dir="${build-beastfx}" />
+        <delete dir="${beast-source-root}" />
+        <delete dir="${beastfx-source-root}" />
+        <delete dir="${build-test}" />
 
         <echo/>
         <echo/>
