@@ -65,7 +65,7 @@ public class MixedTreeLikelihood extends Distribution {
         for (int i = 0; i < p.length; i++) {
             Distribution likelihood = pLikelihoods.get().get(i);
             p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
-            p[i] += weightVector.getArrayValue(i);
+            p[i] += Math.log(weightVector.getArrayValue(i));
             if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
                 logP += p[i];
                 return logP;
