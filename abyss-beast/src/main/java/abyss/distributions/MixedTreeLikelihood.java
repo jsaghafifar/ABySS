@@ -1,13 +1,12 @@
 package abyss.distributions;
 
 
-import abyss.substitutionmodel.ABySSModelAveraging;
 import beast.base.core.*;
 import beast.base.evolution.likelihood.TreeLikelihood;
-import beast.base.evolution.substitutionmodel.GeneralSubstitutionModel;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.inference.State;
 import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math3.util.FastMath;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,16 +31,16 @@ public class MixedTreeLikelihood extends TreeLikelihood {
 
         if (pLikelihoods.get().isEmpty()) logP = 0;
 
-        if (m_siteModel.substModelInput.get() instanceof ABySSModelAveraging) { // TODO change name to reflect new purpose
-            List<GeneralSubstitutionModel> modelList = ((ABySSModelAveraging) m_siteModel.substModelInput.get()).substModelInput.get();
-            substModels.addAll(modelList);
-        } else {
-            throw new IllegalArgumentException("Expected subst model to be of type ABySSModelAveraging");
-        }
+//        if (m_siteModel.substModelInput.get() instanceof ABySSModelAveraging) { // TODO change name to reflect new purpose
+//            List<GeneralSubstitutionModel> modelList = ((ABySSModelAveraging) m_siteModel.substModelInput.get()).substModelInput.get();
+//            substModels.addAll(modelList);
+//        } else {
+//            throw new IllegalArgumentException("Expected subst model to be of type ABySSModelAveraging");
+//        }
 
         if (weightVectorInput.get() != null) {
             weightVector = weightVectorInput.get();
-            if (weightVector.getDimension() != substModels.size())
+            if (weightVector.getDimension() != pLikelihoods.get().size())
                 throw new IllegalArgumentException("Must be same number of likelihood weights as subst models.");
             double sum = 0;
             for (int i = 0; i < weightVector.getDimension(); i++) {
@@ -49,7 +48,7 @@ public class MixedTreeLikelihood extends TreeLikelihood {
             }
             if (Math.abs(sum - 1) > 1e-6) throw new IllegalArgumentException("Likelihood weights must sum to 1.");
         } else {
-            Double[] weights = new Double[substModels.size()];
+            Double[] weights = new Double[pLikelihoods.get().size()];
             Arrays.fill(weights, 1.0 / weights.length);
             weightVector = new RealParameter(weights);
         }
@@ -62,17 +61,26 @@ public class MixedTreeLikelihood extends TreeLikelihood {
     @Override
     public double calculateLogP() {
         logP = 0;
+        double[] p = new double[pLikelihoods.get().size()];
 
-        for (int i = 0; i < pLikelihoods.get().size(); i++) {
+        for (int i = 0; i < p.length; i++) {
             TreeLikelihood likelihood = pLikelihoods.get().get(i);
-            double p = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
-            if (Double.isInfinite(p) || Double.isNaN(p)) {
-                logP += p;
+            p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
+            if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
+                logP += p[i];
                 return logP;
-            } else {
-                logP += p * weightVectorInput.get().getArrayValue(i);
             }
+//            else {
+//                logP += p[i] * weightVectorInput.get().getArrayValue(i);
+//            }
         }
+
+        double max = Arrays.stream(p).max().getAsDouble();
+
+        for (int i = 0; i < p.length; i++) {
+            logP += FastMath.exp(p[i]-max);
+        }
+        logP = max + Math.log(logP);
 
         return logP;
     }
