@@ -57,11 +57,11 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         if (nq.getIndicators() != null) {
             Value<Boolean[]> indicators = nq.getIndicators();
             BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
-            createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates);
+            if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates);
             rateIndicatorParameter.setInputValue("keys", keys);
             rateIndicatorParameter.initAndValidate();
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
-        } else createEigenFriendlyQPrior(context, ratesParameter, null, numStates);
+        } else if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, null, numStates);
         //TODO add bitflip operator spec: uniform=false
 
         List<Transform> rateTransforms = new ArrayList<>();
@@ -71,7 +71,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         beastNQ.setInputValue("rates", ratesParameter);
         beastNQ.setInputValue("symmetric", symmetric.value());
         beastNQ.initAndValidate();
-        addFreqLogger(context, beastNQ, statesList);
+        if (!symmetric.value()) addFreqLogger(context, beastNQ, statesList);
 
         return beastNQ;
     }
