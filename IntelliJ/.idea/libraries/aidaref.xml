@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="aidaref">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../colt-1.2.0/colt/src/hep/aida/ref/doc-files/aidaref.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

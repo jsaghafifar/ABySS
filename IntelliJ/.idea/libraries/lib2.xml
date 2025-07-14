@@ -1,0 +1,30 @@
+<component name="libraryTable">
+  <library name="lib2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEAST_CLASSIC-1.6.3.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/FastRelaxedClockLogNormal-1.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/ORC.src-1.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEAST.base.src-2.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/CoupledMCMC.v1.2.2.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEAST.app-2.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEAST.app.src-2.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/MutableAlignment-0.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/feast.v9.8.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEAST.base-2.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/nashorn.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/feast.v9.8.5.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEASTlabs.v2.0.2.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/MutableAlignment-0.0.2.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/ORC-1.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/launcher.src-2.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/SSM.v1.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEASTlabs.v2.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/CoupledMCMC.v1.2.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/BEAST_CLASSIC-1.6.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/bdtree.v0.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../LPhyBeast/lphybeast/lib/launcher-2.7.7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

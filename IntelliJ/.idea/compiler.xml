@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="abyss-lphy" />
+        <module name="lphybeast-flc" />
+        <module name="lphybeast-mm" />
+        <module name="lphy-base" />
+        <module name="abyss-beast" />
+        <module name="lphybeast-ext" />
+        <module name="lphybeast-mascot" />
+        <module name="lphy" />
+        <module name="lphy-studio" />
+        <module name="abyss-studio" />
+        <module name="abyss-lphybeast" />
+        <module name="lphybeast" />
+        <module name="lphybeast-sa" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>

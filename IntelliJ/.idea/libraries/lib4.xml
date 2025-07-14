@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="lib4">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../colt-1.2.0/colt/lib/concurrent.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../colt-1.2.0/colt/lib/colt.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
