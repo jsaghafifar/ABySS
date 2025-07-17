@@ -7,6 +7,7 @@
         <provider classname="abyss.distributions.EigenFriendlyQPrior"/>
         <provider classname="abyss.distributions.InformedDirichletPrior"/>
         <provider classname="abyss.distributions.MixedTreeLikelihood"/>
+        <provider classname="abyss.distributions.PseudoPrior"/>
         <provider classname="abyss.distributions.SVSPrior"/>
         <provider classname="abyss.inference.AbyssSVS"/>
         <provider classname="abyss.substitutionmodel.ABySSubstitutionModel"/>
