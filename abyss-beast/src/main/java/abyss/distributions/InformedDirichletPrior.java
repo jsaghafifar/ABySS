@@ -11,6 +11,9 @@ import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ContinuousDistribution;
 import org.apache.commons.math.distribution.Distribution;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 
 @Description("Informed Dirichlet distribution.")
 public class InformedDirichletPrior extends ParametricDistribution {

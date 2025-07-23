@@ -5,6 +5,10 @@ import beast.base.inference.CalculationNode;
 
 import java.io.PrintStream;
 
+/**
+ * @author Jasmine Saghafifar
+ */
+
 @Description("Equilibrium frequency logger")
 public class ABySSFrequencyLogger extends CalculationNode implements Loggable, Function {
     final public Input<ABySSubstitutionModel> modelInput;

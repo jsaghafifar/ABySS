@@ -14,6 +14,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Jasmine Saghafifar
+ */
+
 @Description("Substitution model that can average over a number of substitution models ")
 
 public class ABySSModelAveraging extends GeneralSubstitutionModel {

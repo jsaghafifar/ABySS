@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 
 @Description("Bernoulli distribution, used as prior for SVS rate indicator booleans in rate matrices.")
 public class SVSPrior extends Distribution {

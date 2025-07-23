@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
+/**
+ * @author Jasmine Saghafifar
+ */
+
 @Description("Pseudo prior to be used when a model is not active in model averaging.")
 public class PseudoPrior extends Distribution {
 

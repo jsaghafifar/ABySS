@@ -16,10 +16,8 @@ import java.util.Arrays;
 
 
 /**
- * ported from beast1 to BEAST_CLASSIC - author: Marc Suchard
- * @author dkuh004
- *         Date: Sep 18, 2011
- *         Time: 6:03:49 PM
+ * Adapted from BEAST_CLASSIC SVSGeneralSubstitutionModel (Marc Suchard, dkuh004)
+ * @author Jasmine Saghafifar
  */
 @Description("ABySS ver SVS General Substitution Model")
 public class ABySSubstitutionModel extends ComplexSubstitutionModel implements AbyssSVS {
