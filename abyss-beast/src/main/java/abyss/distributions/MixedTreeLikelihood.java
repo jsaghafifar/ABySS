@@ -28,7 +28,7 @@ public class MixedTreeLikelihood extends Distribution {
     final public Input<RealParameter> metaWeightsInput =
             new Input<>("metaWeights", "tree likelihood weights. Uniform if not specified", Input.Validate.OPTIONAL);
     final public Input<RealParameter> siteModelWeightsInput = new Input<>("siteModelWeights",
-            "variable site likelihood weights. Required for site mixture (one for each model)", Input.Validate.OPTIONAL);
+            "estimated site likelihood weights. Required for site mixture (one for each model)", Input.Validate.OPTIONAL);
 
     protected String mode;
     protected RealParameter metaWeights;

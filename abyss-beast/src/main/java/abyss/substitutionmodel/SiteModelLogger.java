@@ -2,6 +2,7 @@ package abyss.substitutionmodel;
 
 import abyss.distributions.MixedTreeLikelihood;
 import beast.base.core.BEASTObject;
+import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.alignment.Alignment;
@@ -12,6 +13,7 @@ import beast.base.util.Randomizer;
 
 import java.io.PrintStream;
 
+@Description("Logger for site models with a number of mixed likelihoods.")
 public class SiteModelLogger extends BEASTObject implements Loggable {
 
     final public Input<MixedTreeLikelihood> mixedLikelihoodsInput = new Input<>("mixedLikelihoods", "Mixed tree likelihoods", Input.Validate.REQUIRED);
