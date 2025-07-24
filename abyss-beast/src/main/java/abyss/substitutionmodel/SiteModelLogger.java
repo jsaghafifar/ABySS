@@ -42,7 +42,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
     public void log(long sample, PrintStream out) {
         // sample one of the models or the site mixture
         double[] metaWeights = mixedLikelihoodsInput.get().metaWeightsInput.get().getDoubleValues();
-        int modelIndex = Randomizer.randomChoice(metaWeights); // or randomChoicePDF()?
+        int modelIndex = Randomizer.randomChoicePDF(metaWeights);
 
         String mode = mixedLikelihoodsInput.get().modeInput.get();
         if (!mode.equalsIgnoreCase("mix") && modelIndex < modelCount) {
