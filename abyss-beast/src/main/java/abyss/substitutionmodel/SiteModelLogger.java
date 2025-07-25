@@ -36,7 +36,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
 
     @Override
     public void init(PrintStream out) {
-        for (int i = 0; i < modelCount; i++) {
+        for (int i = 0; i < siteCount; i++) {
             out.print((getID() != null ? getID() : "site") + "." + (i+1) + "\t");
         }
     }
