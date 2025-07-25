@@ -23,10 +23,12 @@ public class MixedTreeLikelihood extends Distribution {
     final public Input<List<Distribution>> pLikelihoods =
             new Input<>("likelihood", "individual tree likelihoods", new ArrayList<>());
     final public Input<String> modeInput = new Input<>("mode",
-            "how likelihoods should be handled. Site mixture (mix), model averaging (avg), or (both).",
-            Input.Validate.REQUIRED);
+            "how likelihoods should be handled. " +
+                    "Site mixture (mix), model averaging (avg), or (both).", Input.Validate.REQUIRED);
     final public Input<RealParameter> metaWeightsInput =
-            new Input<>("metaWeights", "tree likelihood weights. Uniform if not specified", Input.Validate.OPTIONAL);
+            new Input<>("metaWeights",
+                    "tree likelihood weights. Should be an indicator " +
+                            "if averaging, or uniform if mixing. Default uniform.", Input.Validate.OPTIONAL);
     final public Input<RealParameter> siteModelWeightsInput = new Input<>("siteModelWeights",
             "estimated site likelihood weights. Required for site mixture (one for each model)", Input.Validate.OPTIONAL);
 
@@ -90,47 +92,17 @@ public class MixedTreeLikelihood extends Distribution {
     @Override
     public double calculateLogP() {
         logP = 0;
-        int nrOfLikelihoods = pLikelihoods.get().size();
+        double[] p = getPartialLogLikelihoods();
 
-        if (mode.equalsIgnoreCase("mix")) {
-            // site mixture mode
-            logP = calculateSiteMixtureLogP();
-
-        } else if (mode.equalsIgnoreCase("both")) {
-            double[] p = new double[nrOfLikelihoods + 1];
-            // averaging mode
-            for (int i = 0; i < nrOfLikelihoods; i++) {
-                Distribution likelihood = pLikelihoods.get().get(i);
-                p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
-                if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
-                    logP += p[i];
-                    return logP;
-                }
-                p[i] += Math.log(metaWeights.getArrayValue(i));
+        for (int i = 0; i < p.length; i++) {
+            if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
+                logP += p[i];
+                return logP;
             }
-
-            // site mixture mode for an extra p[] entry
-            p[nrOfLikelihoods] = calculateSiteMixtureLogP();
-            p[nrOfLikelihoods] += Math.log(siteModelWeights.getArrayValue(nrOfLikelihoods));
-
-            logP = logSumExp(p);
-
-        } else if (mode.equalsIgnoreCase("avg")) {
-            double[] p = new double[nrOfLikelihoods];
-            // averaging mode
-            for (int i = 0; i < nrOfLikelihoods; i++) {
-                Distribution likelihood = pLikelihoods.get().get(i);
-                p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
-                if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
-                    logP += p[i];
-                    return logP;
-                }
-                p[i] += Math.log(metaWeights.getArrayValue(i));
-            }
-
-            logP = logSumExp(p);
-
         }
+
+        if (mode.equalsIgnoreCase("mix")) logP = p[0];
+        else logP = logSumExp(p);
 
         return logP;
     }
@@ -179,68 +151,58 @@ public class MixedTreeLikelihood extends Distribution {
         
         return false;
     }
-    
-    @Override
-    public double getNonStochasticLogP() {
-        double logP = 0;
+
+    public double[] getPartialLogLikelihoods() {
+        double[] p;
         int nrOfLikelihoods = pLikelihoods.get().size();
 
         if (mode.equalsIgnoreCase("mix")) {
-            // site mixture mode
-            logP = calculateSiteMixtureLogP(); // TODO any non stochastic version?
+            p = new double[1];
+            p[0] = calculateSiteMixtureLogP();
 
         } else if (mode.equalsIgnoreCase("both")) {
-            double[] p = new double[nrOfLikelihoods + 1];
-            // averaging mode
+            p = new double[nrOfLikelihoods + 1];
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
-                p[i] = likelihood.getNonStochasticLogP();
-                if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
-                    logP += p[i];
-                    return logP;
-                }
+                p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
                 p[i] += Math.log(metaWeights.getArrayValue(i));
             }
 
-            // site mixture mode for an extra p[] entry
             p[nrOfLikelihoods] = calculateSiteMixtureLogP();
             p[nrOfLikelihoods] += Math.log(metaWeights.getArrayValue(nrOfLikelihoods));
 
-            logP = logSumExp(p);
-
         } else if (mode.equalsIgnoreCase("avg")) {
-            double[] p = new double[nrOfLikelihoods];
-            // averaging mode
+            p = new double[nrOfLikelihoods];
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
-                p[i] = likelihood.getNonStochasticLogP();
-                if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
-                    logP += p[i];
-                    return logP;
-                }
+                p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
                 p[i] += Math.log(metaWeights.getArrayValue(i));
             }
 
-            logP = logSumExp(p);
+        } else throw new UnsupportedOperationException();
 
-        }
-
-        return logP;
+        return p;
     }
 
     private double calculateSiteMixtureLogP() {
         int nrOfLikelihoods = pLikelihoods.get().size();
         int nrOfPatterns = ((TreeLikelihood) pLikelihoods.get().get(0)).getPatternLogLikelihoods().length;
         double[] pSite = new double[nrOfLikelihoods];
+        double logPMixture = 0;
+        Alignment data = ((TreeLikelihood) pLikelihoods.get().get(0)).dataInput.get();
+
         for (int j = 0; j < nrOfPatterns; j++) {
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
                 double[] patternLogLikelihoods = ((TreeLikelihood) likelihood).getPatternLogLikelihoods();
                 pSite[i] = patternLogLikelihoods[j];
                 pSite[i] += Math.log(siteModelWeights.getArrayValue(i));
+                pSite[i] *= ((TreeLikelihood) pLikelihoods.get().get(0)).dataInput.get().getPatternWeight(i);
             }
+            logPMixture += logSumExp(pSite) * data.getPatternWeight(j);
         }
-        return logSumExp(pSite);
+
+        return logPMixture;
     }
 
     private double logSumExp(double[] p) {
