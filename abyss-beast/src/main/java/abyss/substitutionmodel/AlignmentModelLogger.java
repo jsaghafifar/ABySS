@@ -27,7 +27,7 @@ public class AlignmentModelLogger extends BEASTObject implements Loggable {
 
     @Override
     public void init(PrintStream out) {
-        out.print((getID() != null ? getID() : "modelSelector") + "\t");
+        out.print((getID() != null ? getID() : "modelIndicator") + "\t");
     }
 
     @Override
