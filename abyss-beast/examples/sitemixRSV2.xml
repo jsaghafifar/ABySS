@@ -360,7 +360,7 @@ name="alignment">
             <log idref="CoalescentExponential.t:RSV2"/>                    
             <log idref="ePopSize.t:RSV2"/>                    
             <log idref="growthRate.t:RSV2"/>
-            <!--<log id="siteLikelihood" spec="abyss.substitutionmodel.SiteModelLogger" mixedLikelihoods="@likelihood"/>-->
+            <log id="siteLikelihood" spec="abyss.substitutionmodel.SiteModelLogger" mixedLikelihoods="@likelihood"/>
         </logger>
         <logger id="screenlog" spec="Logger" logEvery="10000">
             <log idref="posterior"/>
