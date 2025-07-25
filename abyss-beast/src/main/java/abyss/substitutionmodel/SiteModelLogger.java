@@ -10,13 +10,16 @@ import beast.base.evolution.likelihood.LikelihoodCore;
 import beast.base.evolution.likelihood.TreeLikelihood;
 import beast.base.evolution.tree.Tree;
 import beast.base.util.Randomizer;
+import org.apache.commons.math3.util.FastMath;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
-@Description("Logger for site models with a number of mixed likelihoods.")
+@Description("Site logger for models with a number of mixed likelihoods.")
 public class SiteModelLogger extends BEASTObject implements Loggable {
 
-    final public Input<MixedTreeLikelihood> mixedLikelihoodsInput = new Input<>("mixedLikelihoods", "Mixed tree likelihoods", Input.Validate.REQUIRED);
+    final public Input<MixedTreeLikelihood> mixedLikelihoodsInput = new Input<>("mixedLikelihoods",
+            "Mixed tree likelihoods", Input.Validate.REQUIRED);
 
     int siteCount;
     int nrOfPatterns;
@@ -40,9 +43,19 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
 
     @Override
     public void log(long sample, PrintStream out) {
-        // sample one of the models or the site mixture
-        double[] metaWeights = mixedLikelihoodsInput.get().metaWeightsInput.get().getDoubleValues();
-        int modelIndex = Randomizer.randomChoicePDF(metaWeights);
+        // sample from models posteriors
+        double[] partialLogLikelihoods = mixedLikelihoodsInput.get().getPartialLogLikelihoods();
+        double[] posteriorOfEachModel = new double[partialLogLikelihoods.length];
+        double max = Arrays.stream(partialLogLikelihoods).max().getAsDouble();
+        double pSum = 0;
+        for (int i = 0; i < partialLogLikelihoods.length; i++) {
+            posteriorOfEachModel[i] = FastMath.exp(partialLogLikelihoods[i]-max);
+            pSum += posteriorOfEachModel[i];
+        }
+        for (int i = 0; i < posteriorOfEachModel.length; i++) {
+            posteriorOfEachModel[i] /= pSum;
+        }
+        int modelIndex = Randomizer.randomChoicePDF(posteriorOfEachModel);
 
         String mode = mixedLikelihoodsInput.get().modeInput.get();
         if (!mode.equalsIgnoreCase("mix") && modelIndex < modelCount) {
@@ -66,7 +79,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
             double[] probsPattern = new double[this.modelCount];
 
             for (int i = 0; i < this.nrOfPatterns; i++) {
-                double pSum = 0;
+                pSum = 0;
                 for (int j = 0; j < this.modelCount; j++) {
                     probsPattern[j] = rootPartials[i][j] * siteModelWeights[j];
                     pSum += probsPattern[j];
