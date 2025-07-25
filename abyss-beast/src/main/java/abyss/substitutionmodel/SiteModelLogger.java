@@ -65,7 +65,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
         } else {
             // for site mixture, calculate likelihood for every site, sampling model index from each
             double[] siteModelWeights = mixedLikelihoodsInput.get().siteModelWeightsInput.get().getDoubleValues();
-            double[][] rootPartials = new double[this.nrOfPatterns][this.modelCount];
+            double[][] rootPartials = new double[this.modelCount][this.nrOfPatterns];
 
             // get root partials for site likelihoods
             for (int i = 0; i < modelCount; i++) {
@@ -78,16 +78,16 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
             double[][] posteriorOfEachModelPerPattern = new double[this.nrOfPatterns][this.modelCount];
             double[] probsPattern = new double[this.modelCount];
 
-            for (int i = 0; i < this.nrOfPatterns; i++) {
+            for (int j = 0; j < this.nrOfPatterns; j++) {
                 pSum = 0;
-                for (int j = 0; j < this.modelCount; j++) {
-                    probsPattern[j] = rootPartials[i][j] * siteModelWeights[j];
-                    pSum += probsPattern[j];
+                for (int i = 0; i < this.modelCount; i++) {
+                    probsPattern[i] = rootPartials[i][j] * siteModelWeights[i];
+                    pSum += probsPattern[i];
                 }
 
                 // normalise posterior
-                for (int j = 0; j < this.modelCount; j++) {
-                    posteriorOfEachModelPerPattern[i][j] = probsPattern[j] / pSum;
+                for (int i = 0; i < this.modelCount; i++) {
+                    posteriorOfEachModelPerPattern[j][i] = probsPattern[i] / pSum;
                 }
             }
 
