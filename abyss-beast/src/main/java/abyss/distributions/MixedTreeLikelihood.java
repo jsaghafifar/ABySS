@@ -122,7 +122,7 @@ public class MixedTreeLikelihood extends Distribution {
     @Override
     public List<String> getArguments() {
         List<String> arguments = new ArrayList<>();
-        arguments.add(siteModelWeightsInput.get().getID());
+        if (siteModelWeightsInput.get() != null) arguments.add(siteModelWeightsInput.get().getID());
         for (Distribution likelihood : pLikelihoods.get()) {
             arguments.addAll(likelihood.getArguments());
         }
@@ -133,7 +133,7 @@ public class MixedTreeLikelihood extends Distribution {
     public List<String> getConditions() {
         List<String> conditions = new ArrayList<>();
         conditions.add(modeInput.get());
-        conditions.add(metaWeightsInput.get().getID());
+        if (metaWeightsInput.get() != null) conditions.add(metaWeightsInput.get().getID());
         for (Distribution likelihood : pLikelihoods.get()) {
             conditions.addAll(likelihood.getConditions());
         }
@@ -197,7 +197,6 @@ public class MixedTreeLikelihood extends Distribution {
                 double[] patternLogLikelihoods = ((TreeLikelihood) likelihood).getPatternLogLikelihoods();
                 pSite[i] = patternLogLikelihoods[j];
                 pSite[i] += Math.log(siteModelWeights.getArrayValue(i));
-                pSite[i] *= ((TreeLikelihood) pLikelihoods.get().get(0)).dataInput.get().getPatternWeight(i);
             }
             logPMixture += logSumExp(pSite) * data.getPatternWeight(j);
         }
