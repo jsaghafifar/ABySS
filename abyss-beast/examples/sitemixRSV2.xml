@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="BEAST.base v2.7.8:ABySS v0.0.1" version="2.7">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="BEAST.base v2.7.8:ABySS v0.0.1" version="2.8">
 
     <data
 id="RSV2"
@@ -165,12 +165,12 @@ name="alignment">
                 </trait>
                 <taxonset idref="TaxonSet.RSV2"/>
             </tree>
-            <stateNode id="SubstModelIndicator" spec="parameter.IntegerParameter" lower="0" upper="1">0</stateNode>
             <parameter id="clockRate.c:RSV2" spec="parameter.RealParameter" lower="0.0" name="stateNode">1.0</parameter>
             <parameter id="gammaShape.s:RSV2" spec="parameter.RealParameter" lower="0.1" name="stateNode">1.0</parameter>
             <parameter id="NQrates.s:RSV2" spec="parameter.RealParameter" dimension="12" keys="A.C A.G A.T C.A C.G C.T G.A G.C G.T T.A T.C T.G" lower="0.0" name="stateNode" upper="1.0">0.0833333333333333333</parameter>
             <parameter id="Qrates.s:RSV2" spec="parameter.RealParameter" dimension="6" keys="A.C A.G A.T C.G C.T G.T" lower="0.0" name="stateNode" upper="1.0">0.1666666666666666666</parameter>
             <parameter id="Qfreq.s:RSV2" spec="parameter.RealParameter" dimension="4" keys="A C G T" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
+            <parameter id="siteMixtureWeights" spec="parameter.RealParameter" dimension="2" keys="NQ Q" lower="0.0" upper="1.0" name="stateNode">0.5</parameter>
             <!-- coalescent exponential -->
             <parameter id="ePopSize.t:RSV2" spec="parameter.RealParameter" lower="0.0" name="stateNode">0.3</parameter> 
             <parameter id="growthRate.t:RSV2" spec="parameter.RealParameter" name="stateNode">3.0E-4</parameter>
@@ -191,53 +191,31 @@ name="alignment">
                 <prior id="ClockPrior.c:RSV2" name="distribution" x="@clockRate.c:RSV2">
                     <Uniform id="Uniform.0" name="distr" upper="Infinity"/>
                 </prior>
-
-                <distribution id="QFrequenciesPrior.s:RSV2" spec="abyss.distributions.PseudoPrior" modelIndicator="@SubstModelIndicator" modelIndex="1">
-                    <prior id="QFrequenciesRealPrior.s:RSV2" name="prior" x="@Qfreq.s:RSV2">
-                        <distr id="Dirichlet.00" spec="distribution.Dirichlet">
-                            <parameter id="RealParameter.00" spec="parameter.RealParameter" dimension="4" estimate="false" name="alpha">4.0 4.0 4.0 4.0</parameter>
-                        </distr>
-                    </prior>
-                    <prior id="QFrequenciesPseudoPrior.s:RSV2" name="pseudo" x="@Qfreq.s:RSV2">
-                        <distr id="Dirichlet.01" spec="distribution.Dirichlet">
-                            <parameter id="RealParameter.01" spec="parameter.RealParameter" dimension="4" estimate="false" name="alpha">4.0 3.4 1.1 1.4</parameter>
-                        </distr>
-                    </prior>
-                </distribution>
-
+                <prior id="QFrequenciesPrior.s:RSV2" name="distribution" x="@Qfreq.s:RSV2">
+                    <distr id="Dirichlet.0" spec="distribution.Dirichlet">
+                        <parameter id="RealParameter.0" spec="parameter.RealParameter" dimension="4" estimate="false" name="alpha">4.0 4.0 4.0 4.0</parameter>
+                    </distr>
+                </prior>
                 <prior id="GammaShapePrior.s:RSV2" name="distribution" x="@gammaShape.s:RSV2">
                     <Exponential id="Exponential.0" name="distr">
                         <parameter id="RealParameter.1" spec="parameter.RealParameter" estimate="false" name="mean">1.0</parameter>
                     </Exponential>
                 </prior>
-
-                <distribution id="NQRatesPrior.s:RSV2" spec="abyss.distributions.PseudoPrior" modelIndicator="@SubstModelIndicator" modelIndex="0">
-                    <prior id="NQRatesRealPrior.s:RSV2" name="prior" x="@NQrates.s:RSV2">
-                        <distr id="Dirichlet.10" spec="distribution.Dirichlet">
-                            <parameter id="RealParameter.20" spec="parameter.RealParameter" dimension="12" estimate="false" name="alpha">1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0</parameter>
-                        </distr>
-                    </prior>
-                    <prior id="NQRatesPseudoPrior.s:RSV2" name="pseudo" x="@NQrates.s:RSV2">
-                        <distr id="Dirichlet.11" spec="distribution.Dirichlet">
-                            <parameter id="RealParameter.21" spec="parameter.RealParameter" dimension="12" estimate="false" name="alpha">23.2 75.8 23.5 40.5 1.4 194.2 244.4 9.1 30.4 54.2 496.8 6.5</parameter>
-                        </distr>
-                    </prior>
-                </distribution>
-
-                <distribution id="QRatesPrior.s:RSV2" spec="abyss.distributions.PseudoPrior" modelIndicator="@SubstModelIndicator" modelIndex="1">
-                    <prior id="QRatesRealPrior.s:RSV2" name="prior" x="@Qrates.s:RSV2">
-                        <distr id="Dirichlet.20" spec="distribution.Dirichlet">
-                            <parameter id="RealParameter.30" spec="parameter.RealParameter" dimension="6" estimate="false" name="alpha">1.0 1.0 1.0 1.0 1.0 1.0</parameter>
-                        </distr>
-                    </prior>
-                    <prior id="QRatesPseudoPrior.s:RSV2" name="pseudo" x="@Qrates.s:RSV2">
-                        <distr id="Dirichlet.21" spec="distribution.Dirichlet">
-                            <parameter id="RealParameter.31" spec="parameter.RealParameter" dimension="6" estimate="false" name="alpha">34.7 269.3 62.0 5.9 578.5 49.6</parameter>
-                        </distr>
-                    </prior>
-                </distribution>
-                
-                
+                <prior id="siteMixtureWeightsPrior.s:RSV2" name="distribution" x="@siteMixtureWeights">
+                    <distr id="Dirichlet.1" spec="distribution.Dirichlet">
+                        <parameter id="RealParameter.8" spec="parameter.RealParameter" dimension="2" estimate="false" name="alpha">1.0 1.0</parameter>
+                    </distr>
+                </prior>
+                <prior id="NQRatesPrior.s:RSV2" name="distribution" x="@NQrates.s:RSV2">
+                    <distr id="Dirichlet.2" spec="distribution.Dirichlet">
+                        <parameter id="RealParameter.2" spec="parameter.RealParameter" dimension="12" estimate="false" name="alpha">1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0</parameter>
+                    </distr>
+                </prior>
+                <prior id="QRatesPrior.s:RSV2" name="distribution" x="@Qrates.s:RSV2">
+                    <distr id="Dirichlet.3" spec="distribution.Dirichlet">
+                        <parameter id="RealParameter.3" spec="parameter.RealParameter" dimension="6" estimate="false" name="alpha">1.0 1.0 1.0 1.0 1.0 1.0</parameter>
+                    </distr>
+                </prior>
                 <distribution id="eigenfriendlyQ.prior" spec="abyss.distributions.EigenFriendlyQPrior" nrOfStates="4" rates="@NQrates.s:RSV2"/>
                 <!-- coalescent exponential -->
                  <prior id="ePopSizePrior.t:RSV2" name="distribution" x="@ePopSize.t:RSV2">      
@@ -254,25 +232,29 @@ name="alignment">
                     </LaplaceDistribution>                                
                 </prior>
             </distribution>
-            <distribution id="likelihood" spec="CompoundDistribution" useThreads="true">
-                <distribution id="treeLikelihood.RSV2" spec="ThreadedTreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
-                    <siteModel id="SiteModel.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2">
-                        <parameter id="mutationRate.s:RSV2" spec="parameter.RealParameter" estimate="false" lower="0.0" name="mutationRate">1.0</parameter>
-                        <parameter id="proportionInvariant.s:RSV2" spec="parameter.RealParameter" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+            <distribution id="likelihood" spec="abyss.distributions.MixedTreeLikelihood" mode="both" siteModelWeights="@siteMixtureWeights">
+                <likelihood id="treeLikelihoodNQ.RSV2" spec="TreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
 
-                        <substModel id="ABySS_MA.s:RSV2" spec="abyss.substitutionmodel.ABySSModelAveraging" nrOfStates="4">
-                            <modelIndicator idref="SubstModelIndicator"/>
-                            <model id="nqABySS" spec="abyss.substitutionmodel.ABySSubstitutionModel" rates="@NQrates.s:RSV2"/>
-                            <model id="qABySS" spec="abyss.substitutionmodel.ABySSubstitutionModel" rates="@Qrates.s:RSV2" symmetric="true">
-                                <frequencies id="ABySSQfreq" spec="Frequencies" frequencies="@Qfreq.s:RSV2"/>
-                            </model>
-                        </substModel>
+                    <siteModel id="SiteModelNQ.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2">
+                        <parameter id="mutationRate.s:RSV2" spec="parameter.RealParameter" estimate="false" lower="0.0" name="mutationRate">1.0</parameter>
+
+                        <substModel id="substNQ.s:RSV2" spec="abyss.substitutionmodel.ABySSubstitutionModel" rates="@NQrates.s:RSV2"/>
+                            
                     </siteModel>
                     <branchRateModel id="StrictClock.c:RSV2" spec="beast.base.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:RSV2"/>
-                </distribution>
+                </likelihood>
+                <likelihood id="treeLikelihoodQ.RSV2" spec="TreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
+
+                    <siteModel id="SiteModelQ.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2" mutationRate="@mutationRate.s:RSV2">
+
+                        <substModel id="substQ.s:RSV2" spec="abyss.substitutionmodel.ABySSubstitutionModel" rates="@Qrates.s:RSV2" symmetric="true">
+                            <frequencies id="ABySSQfreq" spec="Frequencies" frequencies="@Qfreq.s:RSV2"/>
+                        </substModel>
+                    </siteModel>
+                    <branchRateModel idref="StrictClock.c:RSV2"/>
+                </likelihood>
             </distribution>
         </distribution>
-        <operator id="ModelIndicatorUniformOperator" spec="UniformOperator" parameter="@SubstModelIndicator" weight="3.0"/>
         <operator id="StrictClockRateScaler.c:RSV2" spec="AdaptableOperatorSampler" weight="1.5">
             <parameter idref="clockRate.c:RSV2"/>
             <operator id="AVMNOperator.RSV2" spec="kernel.AdaptableVarianceMultivariateNormalOperator" allowNonsense="true" beta="0.05" burnin="400" initial="800" weight="2.0">
@@ -281,6 +263,9 @@ name="alignment">
                 </transformations>
                 <transformations id="AVMNSumTransform1.RSV2" spec="operator.kernel.Transform$LogConstrainedSumTransform">
                     <f idref="NQrates.s:RSV2"/>
+                </transformations>
+                <transformations id="AVMNSumTransform2.RSV2" spec="operator.kernel.Transform$LogConstrainedSumTransform">
+                    <f idref="siteMixtureWeights"/>
                 </transformations>
                 <transformations id="AVMNSumTransform3.RSV2" spec="operator.kernel.Transform$LogConstrainedSumTransform">
                     <f idref="Qrates.s:RSV2"/>
@@ -305,6 +290,13 @@ name="alignment">
             <parameter idref="gammaShape.s:RSV2"/>
             <operator idref="AVMNOperator.RSV2"/>
             <operator id="gammaShapeScalerX.s:RSV2" spec="kernel.BactrianScaleOperator" parameter="@gammaShape.s:RSV2" scaleFactor="0.5" upper="10.0" weight="0.1"/>
+        </operator>
+        <operator id="siteMixtureWeightsExchanger.s:RSV2" spec="AdaptableOperatorSampler" weight="4.0">
+            <parameter idref="siteMixtureWeights"/>
+            <operator idref="AVMNOperator.RSV2"/>
+            <operator id="siteMixtureWeightsExchangerX.s:RSV2" spec="operator.kernel.BactrianDeltaExchangeOperator" delta="0.5" weight="2.0">
+                <parameter idref="siteMixtureWeights"/>
+            </operator>
         </operator>
         <operator id="NQRatesExchanger.s:RSV2" spec="AdaptableOperatorSampler" weight="4.0">
             <parameter idref="NQrates.s:RSV2"/>
@@ -354,24 +346,27 @@ name="alignment">
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
-            <log idref="treeLikelihood.RSV2"/>
+            <log idref="treeLikelihoodNQ.RSV2"/>
+            <log idref="treeLikelihoodQ.RSV2"/>
             <log id="TreeHeight.t:RSV2" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:RSV2"/>
+            <log idref="siteMixtureWeights"/>
+            <log id="modelLikelihood" spec="abyss.substitutionmodel.AlignmentModelLogger" mixedLikelihoods="@likelihood"/>
             <log idref="clockRate.c:RSV2"/>
             <log idref="gammaShape.s:RSV2"/>
             <log idref="NQrates.s:RSV2"/>
             <log idref="Qrates.s:RSV2"/>
-            <log id="NQfreq.s:RSV2" spec="abyss.substitutionmodel.ABySSFrequencyLogger" model="@nqABySS"/>
+            <log id="NQfreq.s:RSV2" spec="abyss.substitutionmodel.ABySSFrequencyLogger" model="@substNQ.s:RSV2"/>
             <log idref="Qfreq.s:RSV2"/>
-            <log idref="SubstModelIndicator"/>
             <log idref="CoalescentExponential.t:RSV2"/>                    
             <log idref="ePopSize.t:RSV2"/>                    
             <log idref="growthRate.t:RSV2"/>
+            <!--<log id="siteLikelihood" spec="abyss.substitutionmodel.SiteModelLogger" mixedLikelihoods="@likelihood"/>-->
         </logger>
         <logger id="screenlog" spec="Logger" logEvery="10000">
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
-            <log idref="SubstModelIndicator"/>
+            <log idref="modelLikelihood"/>
         </logger>
         <logger id="treelog.t:RSV2" spec="Logger" fileName="$(filebase).trees" logEvery="10000" mode="tree">
             <log id="TreeWithMetaDataLogger.t:RSV2" spec="beast.base.evolution.TreeWithMetaDataLogger" tree="@Tree.t:RSV2"/>
