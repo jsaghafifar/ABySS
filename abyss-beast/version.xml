@@ -10,6 +10,8 @@
         <provider classname="abyss.distributions.PseudoPrior"/>
         <provider classname="abyss.distributions.SVSPrior"/>
         <provider classname="abyss.inference.AbyssSVS"/>
+        <provider classname="abyss.inference.CachedTreeLikelihood"/>
+        <provider classname="abyss.inference.CachedBeagleTreeLikelihood"/>
         <provider classname="abyss.substitutionmodel.ABySSubstitutionModel"/>
         <provider classname="abyss.substitutionmodel.ABySSFrequencyLogger"/>
         <provider classname="abyss.substitutionmodel.ABySSModelAveraging"/>
