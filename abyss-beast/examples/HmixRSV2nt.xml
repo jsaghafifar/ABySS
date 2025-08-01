@@ -233,7 +233,7 @@ name="alignment">
                 </prior>
             </distribution>
             <distribution id="likelihood" spec="abyss.distributions.MixedTreeLikelihood" mode="both" siteModelWeights="@siteMixtureWeights">
-                <likelihood id="treeLikelihoodNQ.RSV2" spec="TreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
+                <likelihood id="treeLikelihoodNQ.RSV2" spec="abyss.inference.CachedTreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
 
                     <siteModel id="SiteModelNQ.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2">
                         <parameter id="mutationRate.s:RSV2" spec="parameter.RealParameter" estimate="false" lower="0.0" name="mutationRate">1.0</parameter>
@@ -243,7 +243,7 @@ name="alignment">
                     </siteModel>
                     <branchRateModel id="StrictClock.c:RSV2" spec="beast.base.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:RSV2"/>
                 </likelihood>
-                <likelihood id="treeLikelihoodQ.RSV2" spec="TreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
+                <likelihood id="treeLikelihoodQ.RSV2" spec="abyss.inference.CachedTreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
 
                     <siteModel id="SiteModelQ.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2" mutationRate="@mutationRate.s:RSV2">
 
@@ -301,7 +301,7 @@ name="alignment">
         <operator id="NQRatesExchanger.s:RSV2" spec="AdaptableOperatorSampler" weight="4.0">
             <parameter idref="NQrates.s:RSV2"/>
             <operator idref="AVMNOperator.RSV2"/>
-            <operator id="NQRatesExchangerX.s:RSV2" spec="operator.kernel.BactrianDeltaExchangeOperator" delta="0.16666666" weight="2.0">
+            <operator id="NQRatesExchangerX.s:RSV2" spec="operator.kernel.BactrianDeltaExchangeOperator" delta="0.0833333333" weight="2.0">
                 <parameter idref="NQrates.s:RSV2"/>
             </operator>
         </operator>
