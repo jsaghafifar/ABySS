@@ -9,20 +9,28 @@ public class CachedTreeLikelihood extends TreeLikelihood {
     @Override
     public void initAndValidate() {
         super.initAndValidate();
+        patternLogLikelihoods = new double[alignment.getPatternCount()];
         storedPatternLogLikelihoods = new double[alignment.getPatternCount()];
     }
 
+    
+    @Override
+    public double[] getPatternLogLikelihoods() {
+        if (beagle != null && isDirtyCalculation()) {
+            System.arraycopy(beagle.getPatternLogLikelihoods(), 0, patternLogLikelihoods, 0, patternLogLikelihoods.length);
+        }
+		return patternLogLikelihoods.clone();
+    }
+    
     @Override
     public void store() {
         super.store();
-        if (beagle != null) return;
         System.arraycopy(patternLogLikelihoods, 0, storedPatternLogLikelihoods, 0, patternLogLikelihoods.length);
     }
 
     @Override
     public void restore() {
         super.restore();
-        if (beagle != null) return;
         double[] tmp = patternLogLikelihoods;
         patternLogLikelihoods = storedPatternLogLikelihoods;
         storedPatternLogLikelihoods = tmp;

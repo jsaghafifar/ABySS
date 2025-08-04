@@ -1,32 +1,24 @@
 package abyss.inference;
 
+import beagle.Beagle;
 import beast.base.evolution.likelihood.BeagleTreeLikelihood;
 
 public class CachedBeagleTreeLikelihood extends BeagleTreeLikelihood {
 
-//    protected double[] storedPatternLogLikelihoods;
-
-    @Override
-    public void initAndValidate() {
-        super.initAndValidate();
-//        if (patternLogLikelihoods == null) patternLogLikelihoods = new double[patternCount];
-//        beagle.getSiteLogLikelihoods(patternLogLikelihoods);
-//        storedPatternLogLikelihoods = new double[alignment.getPatternCount()];
-    }
-
-    @Override
-    public void store() {
-        super.store();
-//        System.arraycopy(patternLogLikelihoods, 0, storedPatternLogLikelihoods, 0, patternLogLikelihoods.length);
-    }
-
     @Override
     public void restore() {
         super.restore();
-//        requiresRecalculation();
-//        double[] tmp = patternLogLikelihoods;
-//        patternLogLikelihoods = storedPatternLogLikelihoods;
-//        storedPatternLogLikelihoods = tmp;
+        
+        double[] sumLogLikelihoods = new double[1];
+        int rootIndex = partialBufferHelper.getOffsetIndex(treeInput.get().getRoot().getNr());
+
+        int cumulateScaleBufferIndex = Beagle.NONE;
+        if (useScaleFactors) {
+           cumulateScaleBufferIndex = scaleBufferHelper.getOffsetIndex(internalNodeCount);
+        }
+        
+        getBeagle().calculateRootLogLikelihoods(new int[]{rootIndex}, new int[]{0}, new int[]{0},
+                new int[]{cumulateScaleBufferIndex}, 1, sumLogLikelihoods);
     }
 
 }
