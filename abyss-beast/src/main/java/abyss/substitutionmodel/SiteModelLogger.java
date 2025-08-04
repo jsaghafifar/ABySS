@@ -6,9 +6,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.likelihood.LikelihoodCore;
 import beast.base.evolution.likelihood.TreeLikelihood;
-import beast.base.evolution.tree.Tree;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.util.FastMath;
 
@@ -65,23 +63,28 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
         } else {
             // for site mixture, calculate likelihood for every site, sampling model index from each
             double[] siteModelWeights = mixedLikelihoodsInput.get().siteModelWeightsInput.get().getDoubleValues();
-            double[][] rootPartials = new double[this.modelCount][this.nrOfPatterns];
+            double[][] patternLogLikelihoods = new double[this.modelCount][this.nrOfPatterns];
 
-            // get root partials for site likelihoods
+            // get pattern log likelihoods
             for (int i = 0; i < modelCount; i++) {
                 TreeLikelihood likelihood = (TreeLikelihood) mixedLikelihoodsInput.get().pLikelihoods.get().get(i);
-                LikelihoodCore core = likelihood.getLikelihoodCore();
-                Tree tree = (Tree) likelihood.treeInput.get();
-                core.getNodePartials(tree.getRoot().getNr(), rootPartials[i]);
+                patternLogLikelihoods[i] = likelihood.getPatternLogLikelihoods();
             }
 
             double[][] posteriorOfEachModelPerPattern = new double[this.nrOfPatterns][this.modelCount];
             double[] probsPattern = new double[this.modelCount];
 
             for (int j = 0; j < this.nrOfPatterns; j++) {
+            	// find max of patternLogLikelihoods for site j
+            	double maxLogP = patternLogLikelihoods[0][j];
+                for (int i = 1; i < this.modelCount; i++) {
+                	maxLogP = Math.max(maxLogP, patternLogLikelihoods[i][j]);
+                }
+                
+                // calc pattern probabilities, taking site model weights in account
                 pSum = 0;
                 for (int i = 0; i < this.modelCount; i++) {
-                    probsPattern[i] = rootPartials[i][j] * siteModelWeights[i];
+                    probsPattern[i] = Math.exp(patternLogLikelihoods[i][j] - maxLogP) * siteModelWeights[i];
                     pSum += probsPattern[i];
                 }
 
