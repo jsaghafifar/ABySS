@@ -15,8 +15,9 @@
         <provider classname="abyss.substitutionmodel.ABySSubstitutionModel"/>
         <provider classname="abyss.substitutionmodel.ABySSFrequencyLogger"/>
         <provider classname="abyss.substitutionmodel.ABySSModelAveraging"/>
-        <provider classname="abyss.substitutionmodel.AlignmentModelLogger"/>
-        <provider classname="abyss.substitutionmodel.SiteModelLogger"/>
+        <provider classname="abyss.logger.AlignmentModelLogger"/>
+        <provider classname="abyss.logger.SiteMixtureLikelihoodLogger"/>
+        <provider classname="abyss.logger.SiteModelLogger"/>
     </service>
 
 </package>

@@ -158,7 +158,7 @@ public class MixedTreeLikelihood extends Distribution {
 
         if (mode.equalsIgnoreCase("mix")) {
             p = new double[1];
-            p[0] = calculateSiteMixtureLogP();
+            p[0] = calculateSiteMixtureLogP(); // TODO add store/restore and isDirty for logPMixture
 
         } else if (mode.equalsIgnoreCase("both")) {
             p = new double[nrOfLikelihoods + 1];
@@ -182,6 +182,10 @@ public class MixedTreeLikelihood extends Distribution {
         } else throw new UnsupportedOperationException();
 
         return p;
+    }
+
+    public double[] getMetaWeights() {
+        return metaWeights.getDoubleValues();
     }
 
     private double calculateSiteMixtureLogP() {
