@@ -18,8 +18,8 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
     private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
     public ABySSFrequencyLogger() {
-        this.modelInput = new Input("model", "ABYSS SVS general substitution model.", Input.Validate.REQUIRED);
-        this.keysInput = new Input("keys", "freq state names");
+        this.modelInput = new Input<>("model", "ABYSS SVS general substitution model.", Input.Validate.REQUIRED);
+        this.keysInput = new Input<>("keys", "freq state names");
     }
 
     public void initAndValidate() {
