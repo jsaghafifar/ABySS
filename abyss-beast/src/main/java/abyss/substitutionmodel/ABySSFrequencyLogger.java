@@ -29,7 +29,7 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
 
     public void init(PrintStream out) {
         // substModel + freq + state name of j = param name
-        String id = "freq.";
+        String id = "NQfreq.";
         String stateName;
 
         for (int i = 0; i < this.model.getStateCount(); i++) {
