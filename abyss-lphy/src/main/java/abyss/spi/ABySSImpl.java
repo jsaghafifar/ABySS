@@ -33,7 +33,8 @@ public class ABySSImpl extends LPhyBaseImpl {
                 NQPFAM.class, NQPFAMRates.class, NQPFAMFreqs.class,
                 FLU.class, FLURates.class, FLUFreqs.class,
                 HIVB.class, HIVBRates.class, HIVBFreqs.class,
-                HIVW.class, HIVWRates.class, HIVWFreqs.class);
+                HIVW.class, HIVWRates.class, HIVWFreqs.class,
+                ComputeEquilibrium.class, MixedAlignment.class);
     }
 
     public String getExtensionName() {
