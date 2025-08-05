@@ -18,9 +18,9 @@ public class SiteMixtureLikelihoodLogger extends BEASTObject implements Loggable
 
     @Override
     public void initAndValidate() {
-        if (mixedLikelihoodsInput.get().modeInput.equals("avg"))
+        if (mixedLikelihoodsInput.get().modeInput.get().equals("avg"))
             throw new IllegalArgumentException("No site mixture models involved in 'avg' mode.");
-        this.siteMixtureIndex = mixedLikelihoodsInput.get().modeInput.equals("both") ?
+        this.siteMixtureIndex = mixedLikelihoodsInput.get().modeInput.get().equals("both") ?
                 mixedLikelihoodsInput.get().pLikelihoods.get().size() : 0;
     }
 
@@ -35,7 +35,7 @@ public class SiteMixtureLikelihoodLogger extends BEASTObject implements Loggable
         // get site mixture log likelihood
         double likelihood = mixedLikelihoodsInput.get().getPartialLogLikelihoods()[this.siteMixtureIndex];
         // if model averaging involved, need to remove meta weight
-        if (mixedLikelihoodsInput.get().modeInput.equals("both"))
+        if (mixedLikelihoodsInput.get().modeInput.get().equals("both"))
             likelihood -= Math.log(mixedLikelihoodsInput.get().getMetaWeights()[this.siteMixtureIndex]);
         out.print(likelihood + "\t");
 
