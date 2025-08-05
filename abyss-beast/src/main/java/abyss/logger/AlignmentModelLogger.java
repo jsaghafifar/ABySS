@@ -1,4 +1,4 @@
-package abyss.substitutionmodel;
+package abyss.logger;
 
 import abyss.distributions.MixedTreeLikelihood;
 import beast.base.core.BEASTObject;
