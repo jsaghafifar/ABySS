@@ -155,8 +155,8 @@ name="alignment">
 
     <map name="OneOnX" >beast.base.inference.distribution.OneOnX</map>
 
-    <run id="mcmc" spec="MCMC" chainLength="100000000">
-        <state id="state" spec="State" storeEvery="50000">
+    <run id="mcmc" spec="MCMC" chainLength="10000000">
+        <state id="state" spec="State" storeEvery="5000">
             <tree id="Tree.t:RSV2" spec="beast.base.evolution.tree.Tree" name="stateNode">
                 <trait id="dateTrait.t:RSV2" spec="beast.base.evolution.tree.TraitSet" traitname="date" value="BE8078s92=1992.0,NYCH09s93=1993.0,SE01s92=1992.0,SE05s91=1991.0,MON1s92=1992.0,BE1587s89=1989.0,BE614s93=1993.0,BE12005s94=1994.0,BE174s95=1995.0,BE12350s96=1996.0,BE12216s96=1996.0,BE11600s94=1994.0,SE10s92=1992.0,MAD6s92=1992.0,BE15471s97=1997.0,SE03s91=1991.0,MAD2s93=1993.0,BE10490s93=1993.0,SE11s95=1995.0,NYCH17s93=1993.0,MAD6s93=1993.0,MAD8s92=1992.0,MAD1s93=1993.0,BE13280s99=1999.0,BE13192s99=1999.0,BE1061s100=2000.0,BE16s100=2000.0,BE2122s100=2000.0,BE1556s101=2001.0,BE800s100=2000.0,BE1441s101=2001.0,BE11976s100=2000.0,BE64s101=2001.0,BE822s100=2000.0,BE13281s99=1999.0,BE1936s100=2000.0,BE1835s101=2001.0,BE1937s100=2000.0,BE1224s101=2001.0,BE2149s100=2000.0,BE1343s101=2001.0,BE1836s101=2001.0,BE1717s101=2001.0,BE112s101=2001.0,BE1150s100=2000.0,BE797s100=2000.0,BE944s100=2000.0,BE14536s98=1998.0,BIR6190s89=1989.0,MON1s90=1990.0,WV12342s84=1984.0,BE2584s85=1985.0,BE933s88=1988.0,WV5222s81=1981.0,BE156s84=1984.0,S2s76=1976.0,BE11030s100=2000.0,BE11129s100=2000.0,BE11091s100=2000.0,BE519s101=2001.0,BE13425s99=1999.0,BE004s102=2002.0,SE12s97=1997.0,BE14808s98=1998.0,SE02s98=1998.0,BE11s101=2001.0,BE13393s99=1999.0,BE14898s98=1998.0,BE332s102=2002.0,BE12028s100=2000.0,BE14461s98=1998.0,MON2s88=1988.0,NYCH57s94=1994.0,BE11465s94=1994.0,MON1s89=1989.0,BE15752s97=1997.0,SE05s96=1996.0,BE13551s95=1995.0,BE12895s95=1995.0,SE10s91=1991.0,SE11s92=1992.0,SE12s94=1994.0,BE1591s90=1990.0,BE512s95=1995.0,SE01s95=1995.0,BE4147s87=1987.0,BE071s88=1988.0,BE538s88=1988.0,BE204s84=1984.0,BE183s85=1985.0,BE076s86=1986.0,BE2466s85=1985.0,BE4763s88=1988.0,BE76s86=1986.0,BE339s86=1986.0,BE3252s86=1986.0,BE410s86=1986.0,WV23836s88=1988.0,BE13462s99=1999.0,BE11584s101=2001.0,BE13412s99=1999.0,SE12s95=1995.0,BE12243s96=1996.0,SE08s96=1996.0,SE09s92=1992.0,SE12s92=1992.0,BE6274s91=1991.0,MADs91=1991.0,BE1440s92=1992.0,BE6460s91=1991.0,BE305s89=1989.0,BE3785s87=1987.0,BE307s87=1987.0,BE119s87=1987.0,BE138s90=1990.0,BE191s90=1990.0,BE369s90=1990.0,MON9s91=1991.0,BIR642s89=1989.0,WV19983s87=1987.0,MON5s91=1991.0,MON51s90=1990.0,MON9s92=1992.0,NYCH34s94=1994.0,BIR1734s89=1989.0,WV2780s79=1979.0,WV6973s82=1982.0,AUSA2s61=1961.0,USALongs56=1956.0">
                     <taxa id="TaxonSet.RSV2" spec="TaxonSet">
@@ -166,7 +166,6 @@ name="alignment">
                 <taxonset idref="TaxonSet.RSV2"/>
             </tree>
             <parameter id="clockRate.c:RSV2" spec="parameter.RealParameter" lower="0.0" name="stateNode">1.0</parameter>
-            <parameter id="gammaShape.s:RSV2" spec="parameter.RealParameter" lower="0.1" name="stateNode">1.0</parameter>
             <parameter id="NQrates.s:RSV2" spec="parameter.RealParameter" dimension="12" keys="A.C A.G A.T C.A C.G C.T G.A G.C G.T T.A T.C T.G" lower="0.0" name="stateNode" upper="1.0">0.0833333333333333333</parameter>
             <parameter id="Qrates.s:RSV2" spec="parameter.RealParameter" dimension="6" keys="A.C A.G A.T C.G C.T G.T" lower="0.0" name="stateNode" upper="1.0">0.1666666666666666666</parameter>
             <parameter id="Qfreq.s:RSV2" spec="parameter.RealParameter" dimension="4" keys="A C G T" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
@@ -195,11 +194,6 @@ name="alignment">
                     <distr id="Dirichlet.0" spec="distribution.Dirichlet">
                         <parameter id="RealParameter.0" spec="parameter.RealParameter" dimension="4" estimate="false" name="alpha">4.0 4.0 4.0 4.0</parameter>
                     </distr>
-                </prior>
-                <prior id="GammaShapePrior.s:RSV2" name="distribution" x="@gammaShape.s:RSV2">
-                    <Exponential id="Exponential.0" name="distr">
-                        <parameter id="RealParameter.1" spec="parameter.RealParameter" estimate="false" name="mean">1.0</parameter>
-                    </Exponential>
                 </prior>
                 <prior id="siteMixtureWeightsPrior.s:RSV2" name="distribution" x="@siteMixtureWeights">
                     <distr id="Dirichlet.1" spec="distribution.Dirichlet">
@@ -235,7 +229,7 @@ name="alignment">
             <distribution id="likelihood" spec="abyss.distributions.MixedTreeLikelihood" mode="both" siteModelWeights="@siteMixtureWeights">
                 <likelihood id="treeLikelihoodNQ.RSV2" spec="abyss.inference.CachedTreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
 
-                    <siteModel id="SiteModelNQ.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2">
+                    <siteModel id="SiteModelNQ.s:RSV2" spec="SiteModel">
                         <parameter id="mutationRate.s:RSV2" spec="parameter.RealParameter" estimate="false" lower="0.0" name="mutationRate">1.0</parameter>
 
                         <substModel id="substNQ.s:RSV2" spec="abyss.substitutionmodel.ABySSubstitutionModel" rates="@NQrates.s:RSV2"/>
@@ -245,7 +239,7 @@ name="alignment">
                 </likelihood>
                 <likelihood id="treeLikelihoodQ.RSV2" spec="abyss.inference.CachedTreeLikelihood" data="@RSV2" tree="@Tree.t:RSV2">
 
-                    <siteModel id="SiteModelQ.s:RSV2" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:RSV2" mutationRate="@mutationRate.s:RSV2">
+                    <siteModel id="SiteModelQ.s:RSV2" spec="SiteModel" mutationRate="@mutationRate.s:RSV2">
 
                         <substModel id="substQ.s:RSV2" spec="abyss.substitutionmodel.ABySSubstitutionModel" rates="@Qrates.s:RSV2" symmetric="true">
                             <frequencies id="ABySSQfreq" spec="Frequencies" frequencies="@Qfreq.s:RSV2"/>
@@ -272,7 +266,6 @@ name="alignment">
                 </transformations>
                 <transformations id="AVMNLogTransform.RSV2" spec="operator.kernel.Transform$LogTransform">
                     <f idref="clockRate.c:RSV2"/>
-                    <f idref="gammaShape.s:RSV2"/>
                 </transformations>
             </operator>
             <operator id="StrictClockRateScalerX.c:RSV2" spec="kernel.BactrianScaleOperator" parameter="@clockRate.c:RSV2" upper="10.0" weight="3.0"/>
@@ -285,11 +278,6 @@ name="alignment">
                 <up idref="clockRate.c:RSV2"/>
                 <down idref="Tree.t:RSV2"/>
             </operator>
-        </operator>
-        <operator id="gammaShapeScaler.s:RSV2" spec="AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="gammaShape.s:RSV2"/>
-            <operator idref="AVMNOperator.RSV2"/>
-            <operator id="gammaShapeScalerX.s:RSV2" spec="kernel.BactrianScaleOperator" parameter="@gammaShape.s:RSV2" scaleFactor="0.5" upper="10.0" weight="0.1"/>
         </operator>
         <operator id="siteMixtureWeightsExchanger.s:RSV2" spec="AdaptableOperatorSampler" weight="4.0">
             <parameter idref="siteMixtureWeights"/>
@@ -353,7 +341,6 @@ name="alignment">
             <log idref="siteMixtureWeights"/>
             <log id="modelIndicator" spec="abyss.logger.AlignmentModelLogger" mixedLikelihoods="@likelihood"/>
             <log idref="clockRate.c:RSV2"/>
-            <log idref="gammaShape.s:RSV2"/>
             <log idref="NQrates.s:RSV2"/>
             <log idref="Qrates.s:RSV2"/>
             <log id="NQfreq.s:RSV2" spec="abyss.substitutionmodel.ABySSFrequencyLogger" model="@substNQ.s:RSV2"/>
