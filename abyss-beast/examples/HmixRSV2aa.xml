@@ -343,7 +343,7 @@ name="alignment">
             <log idref="clockRate.c:RSV2"/>
             <log idref="NQrates.s:RSV2"/>
             <log idref="Qrates.s:RSV2"/>
-            <log id="NQfreq.s:RSV2" spec="abyss.substitutionmodel.ABySSFrequencyLogger" model="@substNQ.s:RSV2"/>
+            <log id="NQfreq.s:RSV2" spec="abyss.logger.ABySSFrequencyLogger" model="@substNQ.s:RSV2"/>
             <log idref="Qfreq.s:RSV2"/>
             <log idref="CoalescentExponential.t:RSV2"/>                    
             <log idref="ePopSize.t:RSV2"/>                    
