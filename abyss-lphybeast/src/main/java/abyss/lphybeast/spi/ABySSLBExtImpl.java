@@ -4,6 +4,7 @@ import abyss.*;
 import beast.base.evolution.datatype.DataType;
 import jebl.evolution.sequences.SequenceType;
 import lphy.core.model.Generator;
+import lphy.core.vectorization.operation.Slice;
 import lphybeast.GeneratorToBEAST;
 import lphybeast.ValueToBEAST;
 import lphybeast.spi.LPhyBEASTExt;
@@ -32,7 +33,8 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
     @Override
     public List<Class<? extends GeneratorToBEAST>> getGeneratorToBEASTs() {
         return Arrays.asList( NonReversibleToBEAST.class, NQPFAMToBEAST.class,
-                InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class );
+                InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class,
+                MixedAlignmentToBEAST.class);
     }
 
     // LPhy SequenceType => BEAST DataType
@@ -48,7 +50,8 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
         return List.of(NQPFAMRates.class, NQPFAMFreqs.class,
                 FLURates.class, FLUFreqs.class,
                 HIVBRates.class, HIVBFreqs.class,
-                HIVWRates.class, HIVWFreqs.class);
+                HIVWRates.class, HIVWFreqs.class,
+                ComputeEquilibrium.class, Slice.class);
     }
 
     @Override

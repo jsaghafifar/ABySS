@@ -20,6 +20,7 @@ public class MixedAlignment extends DeterministicFunction<Alignment> {
     protected static final String aln2ParamName = "aln2";
     protected static final String aln1SitesParamName = "sites";
     protected static final String indicatorParamName = "indicator";
+    protected static final String siteMixtureWeightsParamName = "weights";
 
     public MixedAlignment(@ParameterInfo(name = aln1ParamName,
                                   description = "the first simulated alignment.") Value<Alignment> aln1,
@@ -28,7 +29,10 @@ public class MixedAlignment extends DeterministicFunction<Alignment> {
                           @ParameterInfo(name = aln1SitesParamName, description = "which sites from the first " +
                                   "alignment will be included.") Value<Boolean[]> aln1sites,
                           @ParameterInfo(name = indicatorParamName, description = "the alignment that will be chosen " +
-                                  "from aln1 (0), aln2 (1), or a mix (2).") Value<Integer> indicator) {
+                                  "from aln1 (0), aln2 (1), or a mix (2).") Value<Integer> indicator,
+                          @ParameterInfo(name = siteMixtureWeightsParamName, description = "weights that were used to" +
+                                  " determine site mixture. Required for lphybeast.",
+                                  optional = true) Value<Double[]> weights) {
         setParam(aln1ParamName, aln1);
         setParam(aln2ParamName, aln2);
 
@@ -46,6 +50,9 @@ public class MixedAlignment extends DeterministicFunction<Alignment> {
         else if (indicator.value() == 2)
             LoggerUtils.log.severe("Site mixture model is indicated " +
                     "but no "+aln1SitesParamName+" has been provided.");
+
+        if (weights.value() != null)
+            setParam(siteMixtureWeightsParamName, weights);
     }
 
     @GeneratorInfo(name = "mixedAlignment", verbClause = "is created by",
@@ -95,6 +102,12 @@ public class MixedAlignment extends DeterministicFunction<Alignment> {
 
     public Value<Integer> getModelIndicator() {
         return getParams().get(indicatorParamName);
+    }
+
+    public Value<Double[]> getSiteMixtureWeights() {
+        if (getParams().get(siteMixtureWeightsParamName) != null)
+            return getParams().get(siteMixtureWeightsParamName);
+        return null;
     }
 
 }
