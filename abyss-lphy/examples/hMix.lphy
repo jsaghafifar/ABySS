@@ -5,18 +5,13 @@ nqRates ~ Dirichlet(conc=rep(1.0,12));
 qRates ~ Dirichlet(conc=rep(1.0,6));
 
 nonrevQ = nonReversible(rates=nqRates);
-rootFreq = computeEquilibrium(Q=nonrevQ);
-revQ = nonReversible(rates=qRates, freq=rootFreq, symmetric=true);
+qFreq = computeEquilibrium(Q=nonrevQ);
+revQ = nonReversible(rates=qRates, freq=qFreq, symmetric=true);
 
 siteMixtureWeights ~ Dirichlet(conc=[2.0,2.0]);
 D1sites ~ Bernoulli(p=slice(0,0,siteMixtureWeights), replicates=L);
 indicator ~ sample(array=[0,1,2], size=1);
 
-dummyRates = rep(0.166666,6);
-dummyQ = gtr(rates=dummyRates, freq=rootFreq);
-dummyTree ~ Yule(lambda=1, n=3);
-root ~ PhyloCTMC(L=L, Q=dummyQ, tree=dummyTree, freq=rootFreq);
-
-D1 ~ PhyloCTMC(L=L, Q=nonrevQ, tree=ψ, root=root);
-D2 ~ PhyloCTMC(L=L, Q=revQ, tree=ψ, root=root);
-Dmix = mixedAlignment(aln1=D1, aln2=D2, sites=D1sites, indicator=indicator, weights=siteMixtureWeights);
+D1 ~ PhyloCTMC(L=L, Q=nonrevQ, tree=ψ, dataType=nucleotides());
+D2 ~ PhyloCTMC(L=L, Q=revQ, tree=ψ, root=D1, dataType=nucleotides());
+Dmix ~ MixedAlignment(aln1=D1, aln2=D2, sites=D1sites, indicator=indicator, weights=siteMixtureWeights);
