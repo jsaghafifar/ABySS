@@ -24,7 +24,7 @@ public class ABySSImpl extends LPhyBaseImpl {
 
     @Override
     public List<Class<? extends GenerativeDistribution>> declareDistributions() {
-        return Arrays.asList(ConnectedSVS.class, InformedDirichlet.class);
+        return Arrays.asList(ConnectedSVS.class, InformedDirichlet.class, MixedAlignment.class);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class ABySSImpl extends LPhyBaseImpl {
                 FLU.class, FLURates.class, FLUFreqs.class,
                 HIVB.class, HIVBRates.class, HIVBFreqs.class,
                 HIVW.class, HIVWRates.class, HIVWFreqs.class,
-                ComputeEquilibrium.class, MixedAlignment.class);
+                ComputeEquilibrium.class);
     }
 
     public String getExtensionName() {

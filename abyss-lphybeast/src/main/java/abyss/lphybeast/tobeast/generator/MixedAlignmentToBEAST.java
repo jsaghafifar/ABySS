@@ -41,8 +41,6 @@ public class MixedAlignmentToBEAST implements GeneratorToBEAST<MixedAlignment, M
         Value<Alignment> aln1 = mixedAlignment.getAlignment1();
         Value<Alignment> aln2 = mixedAlignment.getAlignment2();
 
-        // TODO make sure aln1 and aln2 and any other alignments are not included in XML
-
         List<PhyloCTMC> phyloCTMCList = new ArrayList<>();
         phyloCTMCList.add((PhyloCTMC) aln1.getGenerator());
         phyloCTMCList.add((PhyloCTMC) aln2.getGenerator());
@@ -64,7 +62,15 @@ public class MixedAlignmentToBEAST implements GeneratorToBEAST<MixedAlignment, M
             context.addExtraLoggable(likelihood);
             likelihoods.add(likelihood);
             i++;
+
+            context.removeBEASTObject(context.getBEASTObject(phyloCTMC));
         }
+
+        // remove objects not involved in MCMC
+        context.removeBEASTObject(context.getBEASTObject(aln1));
+        context.removeBEASTObject(context.getBEASTObject(aln1));
+        context.removeBEASTObject(context.getBEASTObject(mixedAlignment.getAlignment1Sites()));
+        context.removeBEASTObject(context.getBEASTObject(mixedAlignment.getAlignment1Sites().getGenerator()));
 
         treeLikelihood.setInputValue("likelihood", likelihoods);
         treeLikelihood.setInputValue("mode", "both");
@@ -73,9 +79,6 @@ public class MixedAlignmentToBEAST implements GeneratorToBEAST<MixedAlignment, M
 
         treeLikelihood.initAndValidate();
         treeLikelihood.setID(alignment.getID() + ".treeLikelihood");
-
-//        not needed?
-        context.addExtraLoggable(treeLikelihood);
 
         // loggers
         addSiteMixtureLikelihoodLogger(context,treeLikelihood);
@@ -92,13 +95,18 @@ public class MixedAlignmentToBEAST implements GeneratorToBEAST<MixedAlignment, M
             weights = alignment.getSiteMixtureWeights();
         else throw new IllegalArgumentException("Site mixture weights must be specified for lphybeast.");
 
-        beast.base.inference.distribution.Dirichlet dirichlet = new Dirichlet();
-        dirichlet.setInputValue("alpha", context.getAsRealParameter(weights));
+        if (weights.getGenerator() instanceof lphy.base.distribution.Dirichlet) {
+            beast.base.inference.distribution.Dirichlet dirichlet = new Dirichlet();
+            Value<Number[]> alpha = ((lphy.base.distribution.Dirichlet) weights.getGenerator()).getConcentration();
+            dirichlet.setInputValue("alpha", context.getAsRealParameter(alpha));
+            dirichlet.initAndValidate();
 
-        Prior prior = createPrior(dirichlet, context.getAsRealParameter(weights));
-        context.addBEASTObject(prior, weights);
-        context.addExtraLoggable(prior);
-        treeLikelihood.setInputValue("siteModelWeights", context.getAsRealParameter(weights));
+            Prior prior = createPrior(dirichlet, context.getAsRealParameter(weights));
+            context.addBEASTObject(prior, weights);
+            treeLikelihood.setInputValue("siteModelWeights", context.getAsRealParameter(weights));
+            context.removeBEASTObject(context.getBEASTObject(alignment.getSiteMixtureWeights().getGenerator()));
+        } else treeLikelihood.setInputValue("siteModelWeights", context.getAsRealParameter(weights));
+
     }
 
     private void addSiteMixtureLikelihoodLogger(BEASTContext context, MixedTreeLikelihood treeLikelihood) {

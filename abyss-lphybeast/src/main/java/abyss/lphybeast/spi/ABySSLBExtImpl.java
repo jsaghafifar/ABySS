@@ -34,7 +34,7 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
     public List<Class<? extends GeneratorToBEAST>> getGeneratorToBEASTs() {
         return Arrays.asList( NonReversibleToBEAST.class, NQPFAMToBEAST.class,
                 InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class,
-                MixedAlignmentToBEAST.class);
+                MixedAlignmentToBEAST.class, ComputeEquilibriumToBEAST.class);
     }
 
     // LPhy SequenceType => BEAST DataType
@@ -51,7 +51,7 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
                 FLURates.class, FLUFreqs.class,
                 HIVBRates.class, HIVBFreqs.class,
                 HIVWRates.class, HIVWFreqs.class,
-                ComputeEquilibrium.class, Slice.class);
+                Slice.class);
     }
 
     @Override
