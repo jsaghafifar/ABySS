@@ -1,5 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
+import abyss.MixedAlignment;
 import abyss.distributions.EigenFriendlyQPrior;
 import abyss.substitutionmodel.ABySSFrequencyLogger;
 import beast.base.core.BEASTInterface;
@@ -127,16 +128,22 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
     private char[] getStateNames(BEASTContext context, int numStates) {
         char[] states = new char[numStates];
 
-        if (numStates == 4 && context.getAlignments().get(0).getGenerator() instanceof
-                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) {
+        if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
+                phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) ||
+                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
+                        mixedAlignment.getDataType() == SequenceType.NUCLEOTIDE)
+                && numStates == 4)
             states = new char[] {'A', 'C', 'G', 'T'};
-        } else if (numStates == 20 && context.getAlignments().get(0).getGenerator() instanceof
-                PhyloCTMC phyloCTMC && phyloCTMC.getDataType() == SequenceType.AMINO_ACID) {
+        else if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
+                phyloCTMC.getDataType() == SequenceType.AMINO_ACID) ||
+                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
+                        mixedAlignment.getDataType() == SequenceType.AMINO_ACID)
+                && numStates == 20)
             states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
                     'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
-        } else {
+        else {
             for (int i=0; i<numStates; i++) {
-                states[i] = (char) i;
+                states[i] = Character.forDigit(i, 10);
             }
         }
         return states;

@@ -1,5 +1,6 @@
 package abyss;
 
+import jebl.evolution.sequences.SequenceType;
 import lphy.base.evolution.alignment.Alignment;
 import lphy.base.evolution.alignment.SimpleAlignment;
 import lphy.core.logger.LoggerUtils;
@@ -49,6 +50,8 @@ public class MixedAlignment implements GenerativeDistribution<Alignment> {
             LoggerUtils.log.severe("Alignments must have same length.");
         if (aln1.value().ntaxa() != aln2.value().ntaxa())
             LoggerUtils.log.severe("Alignments must have same number of taxa.");
+        if (aln1.value().dataType() != aln2.value().dataType())
+            LoggerUtils.log.severe("Alignments must be same data type.");
 
         if (indicator.value() < 3 && indicator.value() > -1)
             this.indicator = indicator;
@@ -117,6 +120,10 @@ public class MixedAlignment implements GenerativeDistribution<Alignment> {
 
     public Value<Double[]> getSiteMixtureWeights() {
         return weights;
+    }
+
+    public SequenceType getDataType() {
+        return aln1.value().dataType();
     }
 
     @Override
