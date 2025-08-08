@@ -3,9 +3,9 @@ L = 200;
 ψ ~ Yule(lambda=λ, n=16);
 nqRates ~ Dirichlet(conc=rep(1.0,12));
 qRates ~ Dirichlet(conc=rep(1.0,6));
+qFreq ~ Dirichlet(conc=rep(4.0,4));
 
 nonrevQ = nonReversible(rates=nqRates);
-qFreq = computeEquilibrium(Q=nonrevQ);
 revQ = nonReversible(rates=qRates, freq=qFreq, symmetric=true);
 
 siteMixtureWeights ~ Dirichlet(conc=[2.0,2.0]);
@@ -13,5 +13,5 @@ D1sites ~ Bernoulli(p=slice(0,0,siteMixtureWeights), replicates=L);
 indicator ~ sample(array=[0,1,2], size=1);
 
 D1 ~ PhyloCTMC(L=L, Q=nonrevQ, tree=ψ, dataType=nucleotides());
-D2 ~ PhyloCTMC(L=L, Q=revQ, tree=ψ, root=D1, dataType=nucleotides());
+D2 ~ PhyloCTMC(L=L, Q=revQ, tree=ψ, dataType=nucleotides());
 Dmix ~ MixedAlignment(aln1=D1, aln2=D2, sites=D1sites, indicator=indicator, weights=siteMixtureWeights);
