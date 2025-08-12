@@ -117,7 +117,7 @@ spec="Alignment">
             <log idref="rates"/>
             <log idref="lambda"/>
             <log id="TreeStatLogger" spec="beast.base.evolution.tree.TreeStatLogger" tree="@psi"/>
-            <log id="ABySSFrequencyLogger" spec="abyss.substitutionmodel.ABySSFrequencyLogger" model="@ABySSubstitutionModel"/>
+            <log id="ABySSFrequencyLogger" spec="abyss.logger.ABySSFrequencyLogger" model="@ABySSubstitutionModel"/>
             <log idref="D.treeLikelihood"/>
         </logger>
         <logger id="psi.treeLogger" spec="Logger" fileName="nqNT.trees" logEvery="25000" mode="tree">

@@ -1,5 +1,6 @@
-package abyss.substitutionmodel;
+package abyss.logger;
 
+import abyss.substitutionmodel.ABySSubstitutionModel;
 import beast.base.core.*;
 import beast.base.inference.CalculationNode;
 

@@ -13,7 +13,7 @@
         <provider classname="abyss.inference.CachedTreeLikelihood"/>
         <provider classname="abyss.inference.CachedBeagleTreeLikelihood"/>
         <provider classname="abyss.substitutionmodel.ABySSubstitutionModel"/>
-        <provider classname="abyss.substitutionmodel.ABySSFrequencyLogger"/>
+        <provider classname="abyss.logger.ABySSFrequencyLogger"/>
         <provider classname="abyss.substitutionmodel.ABySSModelAveraging"/>
         <provider classname="abyss.logger.AlignmentModelLogger"/>
         <provider classname="abyss.logger.SiteMixtureLikelihoodLogger"/>

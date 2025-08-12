@@ -2,7 +2,7 @@ package abyss.lphybeast.tobeast.generator;
 
 import abyss.MixedAlignment;
 import abyss.distributions.EigenFriendlyQPrior;
-import abyss.substitutionmodel.ABySSFrequencyLogger;
+import abyss.logger.ABySSFrequencyLogger;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
