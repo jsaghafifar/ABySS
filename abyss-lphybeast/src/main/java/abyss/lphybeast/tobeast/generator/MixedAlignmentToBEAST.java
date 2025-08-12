@@ -68,7 +68,7 @@ public class MixedAlignmentToBEAST implements GeneratorToBEAST<MixedAlignment, M
 
         // remove objects not involved in MCMC
         context.removeBEASTObject(context.getBEASTObject(aln1));
-        context.removeBEASTObject(context.getBEASTObject(aln1));
+        context.removeBEASTObject(context.getBEASTObject(aln2));
         context.removeBEASTObject(context.getBEASTObject(mixedAlignment.getAlignment1Sites()));
         context.removeBEASTObject(context.getBEASTObject(mixedAlignment.getAlignment1Sites().getGenerator()));
 
