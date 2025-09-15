@@ -108,16 +108,7 @@ public class MixedTreeLikelihood extends Distribution {
     }
 
     @Override
-    public void sample(State state, Random random) {
-        if (sampledFlag)
-            return;
-
-        sampledFlag = true;
-
-        for (Distribution likelihood : pLikelihoods.get()) {
-            likelihood.sample(state, random);
-        }
-    }
+    public void sample(State state, Random random) {    }
 
     @Override
     public List<String> getArguments() {
@@ -132,7 +123,6 @@ public class MixedTreeLikelihood extends Distribution {
     @Override
     public List<String> getConditions() {
         List<String> conditions = new ArrayList<>();
-        conditions.add(modeInput.get());
         if (metaWeightsInput.get() != null) conditions.add(metaWeightsInput.get().getID());
         for (Distribution likelihood : pLikelihoods.get()) {
             conditions.addAll(likelihood.getConditions());
@@ -158,7 +148,11 @@ public class MixedTreeLikelihood extends Distribution {
 
         if (mode.equalsIgnoreCase("mix")) {
             p = new double[1];
-            p[0] = calculateSiteMixtureLogP(); // TODO add store/restore and isDirty for logPMixture
+            for (int i = 0; i < nrOfLikelihoods; i++) {
+                Distribution likelihood = pLikelihoods.get().get(i);
+                if (likelihood.isDirtyCalculation()) likelihood.calculateLogP();
+            }
+            p[0] = calculateSiteMixtureLogP();
 
         } else if (mode.equalsIgnoreCase("both")) {
             p = new double[nrOfLikelihoods + 1];
