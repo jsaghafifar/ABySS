@@ -10,6 +10,7 @@ import beast.base.inference.parameter.RealParameter;
 import org.apache.commons.math3.util.FastMath;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -21,18 +22,25 @@ import java.util.Random;
 public class SVSPrior extends Distribution {
 
     final public Input<RealParameter> scaleInput = new Input<>("scale", "probability scale parameter.", Input.Validate.REQUIRED);
-    final public Input<RealParameter> shapeInput = new Input<>("shape", "probability shape parameter.", Input.Validate.REQUIRED);
+    final public Input<RealParameter> sensitivityInput = new Input<>("sens", "probability sensitivity parameter.", Input.Validate.REQUIRED);
     final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.", Input.Validate.REQUIRED);
-    final public Input<RealParameter> empiricalRatesInput = new Input<>("rates", "rates informing bernoulli trials", Input.Validate.REQUIRED);
-    final public Input<Boolean> isSymmetricInput = new Input<>("symmetric", "whether rates come from symmetric matrix", Input.Validate.REQUIRED);
+    final public Input<Integer> nrOfStatesInput = new Input<>("nrOfStates", "number of states being used in Q matrix.", Input.Validate.REQUIRED);
+    final public Input<RealParameter> empiricalQInput = new Input<>("empiricalQ", "empirical Q matrix informing bernoulli trials.", Input.Validate.OPTIONAL);
+    final public Input<Boolean> isSymmetricInput = new Input<>("symmetric", "whether Q is reversible/symmetric rates.", Input.Validate.REQUIRED);
 
     public double calculateLogP() {
         this.logP = 0.0;
         double a = this.scaleInput.get().getValue();
-        double k = this.shapeInput.get().getValue();
+        double k = this.sensitivityInput.get().getValue();
         Boolean[] indicators = this.indicatorsInput.get().getValues();
-        Double[] rates = this.empiricalRatesInput.get().getValues();
-        Boolean sym = this.isSymmetricInput.get();
+        int nrOfStates = this.nrOfStatesInput.get();
+
+        Double[][] q = new Double[nrOfStates][nrOfStates];
+        for (int i = 0; i < nrOfStates; i++) {
+            if (this.empiricalQInput.get() != null) q[i] = this.empiricalQInput.get().getRowValues(i);
+            else Arrays.fill(q[i], 1.0);
+        }
+        Double[] rates = getQValues(q);
 
         double[] p = new double[rates.length];
         for (int i = 0; i < p.length; i++) {
@@ -45,10 +53,6 @@ public class SVSPrior extends Distribution {
         for (int i = 0; i < p.length; i++) {
             logP += indicators[i] ? Math.log(p[i]) : Math.log(1-p[i]);
         }
-
-        int nrOfStates;
-        if (sym) nrOfStates = (int) Math.abs((-1 - Math.sqrt(1+8*rates.length))/2);
-        else nrOfStates = (int) Math.abs((-1 - Math.sqrt(1+4*rates.length))/2);
 
         int sum = 0;
         for (int i = 0; i < indicators.length; i ++) {
@@ -63,6 +67,7 @@ public class SVSPrior extends Distribution {
         for (int i = 0; i < indicators.length; i++) {
             indicatorValues[i] = indicators[i] ? 1.0 : 0.0;
         }
+        Boolean sym = this.isSymmetricInput.get();
         if (!AbyssSVS.Utils.connectedAndWellConditioned(p) ||
                 !AbyssSVS.Utils.isStronglyConnected(indicatorValues, nrOfStates, sym))
             return Double.NEGATIVE_INFINITY;
@@ -81,9 +86,7 @@ public class SVSPrior extends Distribution {
     public List<String> getConditions() {
         List<String> conds = new ArrayList<>();
         conds.add(scaleInput.get().getID());
-        conds.add(shapeInput.get().getID());
-        conds.add(empiricalRatesInput.get().getID());
-//        conds.add(String.valueOf(isSymmetricInput.get())); // TODO check is right?
+        conds.add(sensitivityInput.get().getID());
         return conds;
     }
 
@@ -92,10 +95,39 @@ public class SVSPrior extends Distribution {
         throw new UnsupportedOperationException();
     }
 
+    private Double[] getQValues(Double[][] q) {
+        Boolean sym = this.isSymmetricInput.get();
+        int symQ = sym ? 2 : 1;
+        int n = this.nrOfStatesInput.get();
+        Double[] r = new Double[(n * n - n)/symQ];
+        int x = 0;
+        double sum = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i==j) continue;
+                if (sym & j>i) continue;
+                r[x] = q[i][j];
+                sum += r[x];
+                x++;
+            }
+        }
+
+        x = 0;
+        for (int i = 0; i < r.length; i++) {
+            r[x] /= sum;
+            x++;
+        }
+
+        return r;
+    }
+
     @Override
     public void initAndValidate() {
-        if (indicatorsInput.get().getDimension() != empiricalRatesInput.get().getDimension()) {
-            throw new RuntimeException("Indicators must be same size as empirical rates parameter but it was dimension " + indicatorsInput.get().getDimension());
+        int nrOfStates = nrOfStatesInput.get();
+        int symQ = isSymmetricInput.get() ? 2 : 1;
+        if (indicatorsInput.get().getDimension() != (nrOfStates * nrOfStates - nrOfStates)/symQ) {
+            throw new RuntimeException("Indicators must have " +
+                    (nrOfStates * nrOfStates - nrOfStates)/symQ + " dimension, based on specified number of states.");
         }
     }
 }

@@ -1,7 +1,6 @@
 package abyss;
 
 import lphy.base.distribution.ParametricDistribution;
-import lphy.base.evolution.substitutionmodel.SubstModelParamNames;
 import lphy.core.logger.LoggerUtils;
 import lphy.core.model.RandomVariable;
 import lphy.core.model.Value;
@@ -11,6 +10,7 @@ import lphy.core.model.annotation.ParameterInfo;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -21,7 +21,8 @@ import java.util.TreeMap;
  * @author jsaghafifar
  */
 public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements SVS {
-    private Value<Double[]> rates;
+    private Value<Integer> numStates;
+    private Value<Double[][]> Q;
     private Value<Number> a;
     private Value<Number> k;
     private Value<Boolean> symmetric;
@@ -29,28 +30,35 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
     private static final int MAX_TRIES = 10000;
     private double[] p;
 
-    public static final String ratesParamName = SubstModelParamNames.RatesParamName;
+    public static final String numStatesParamName = "states";
+    public static final String empiricalQParamName = "empiricalQ";
+    public static final String sensitivityParamName = "sens";
     public static final String scaleParamName = "scale";
-    public static final String shapeParamName = "shape";
     public static final String symmetricParamName = "symmetric";
 
-    public ConnectedSVS(@ParameterInfo(name = ratesParamName, narrativeName = "rates", description = "normalised nonreversible empirical rate matrix") Value<Double[]> rates,
+    public ConnectedSVS(@ParameterInfo(name = numStatesParamName, narrativeName = "states", description = "number of states in Q matrix") Value<Integer> numStates,
+                        @ParameterInfo(name = empiricalQParamName, narrativeName = "empiricalQ", description = "normalised empirical Q matrix", optional = true) Value<Double[][]> Q,
+                        @ParameterInfo(name = sensitivityParamName, narrativeName = "sens", description = "indicators' sensitivity to rates, default 1", optional=true) Value<Number> k,
                         @ParameterInfo(name = scaleParamName, narrativeName = "scale", description = "scale of active rates, default 1", optional=true) Value<Number> a,
-                        @ParameterInfo(name = shapeParamName, narrativeName = "shape", description = "indicators' sensitivity to rates, default 1", optional=true) Value<Number> k,
-                        @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) {
+                        @ParameterInfo(name = symmetricParamName, narrativeName = "symmetric", description = "whether rate matrix is symmetric", optional = true) Value<Boolean> symmetric) {
         super();
-        this.rates = rates;
-        if (a != null) {
-            if (a.value().doubleValue() > 0) {
-                this.a = a;
-            } else throw new IllegalArgumentException(scaleParamName+" must be over 0.");
-        } else this.a = new Value(1.0,null);
+        this.numStates = numStates;
+
+        if (Q != null) {
+            this.Q = Q;
+        }
 
         if (k != null) {
             if (k.value().doubleValue() > 0) {
                 this.k = k;
-            } else throw new IllegalArgumentException(shapeParamName+" must be over 0.");
+            } else throw new IllegalArgumentException(sensitivityParamName +" must be over 0.");
         } else this.k = new Value(1.0,null);
+
+        if (a != null) {
+            if (a.value().doubleValue() > 0) {
+                this.a = a;
+            } else throw new IllegalArgumentException(scaleParamName +" must be over 0.");
+        } else this.a = new Value(1.0,null);
 
         setParam(symmetricParamName, Objects.requireNonNullElseGet(symmetric, () -> new Value(null, false)));
 
@@ -64,27 +72,21 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
             category = GeneratorCategory.PRIOR,
             description = "rate-informed Bernoulli distribution with checks to ensure connected graphs for SVS rate matrices")
     public RandomVariable<Boolean[]> sample() {
+        double k = getSensitivity().value().doubleValue();
         double a = getScale().value().doubleValue();
-        double k = getShape().value().doubleValue();
-        Double[] r = getRates().value();
-        double sum = 0;
-        for (int i = 0; i < r.length; i++) {
-            sum += r[i];
+        int n = getNumStates().value();
+        Double[][] q = new Double[n][n];
+        if (getEmpiricalQ() != null) {
+            q = getEmpiricalQ().value();
+        } else {
+            for (int i = 0; i < n; i++) {
+                Arrays.fill(q[i], 1.0);
+            }
         }
-        if (Math.abs(sum - 1.0) > 1e-6) throw new IllegalArgumentException("Rates must be normalised to sum to 1.");
-
-        int n;
-        double root;
-        Boolean sym = getSymmetric().value();
-        if (sym) root = (-1 - Math.sqrt(1+8*r.length)) / 2;
-        else root = (-1 - Math.sqrt(1+4*r.length))/2;
-        if (root % 1 == 0) {
-            n = (int) Math.abs(root);
-        } else throw new IllegalArgumentException(
-                "Wrong number of rates. Must be such that n(n-1) or n(n-1)/2 (n = number of states). " +
-                        "e.g. 4 nucleotide states = 12 rates asymmetric or 6 symmetric.");
-
+        Double[] r = getQValues(q);
         Boolean[] b = new Boolean[r.length];
+        Boolean sym = getSymmetric().value();
+        
         boolean connectedGraph = false;
         int iter = 0;
 
@@ -109,17 +111,19 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
             }
             iter++;
             if (!connectedGraph && iter % (MAX_TRIES/10)==0 && iter < MAX_TRIES) {
-                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. Consider increasing "+scaleParamName+" of "+this.getName()+".");
+                LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. " +
+                        "Consider increasing "+ scaleParamName +" of "+this.getName()+".");
             }
             if (!connectedGraph && iter >= MAX_TRIES) {
-                LoggerUtils.log.severe("Max iterations exceeded! Try increasing "+scaleParamName+" of "+this.getName()+" to keep the graph connected.");
+                LoggerUtils.log.severe("Max iterations exceeded! " +
+                        "Try increasing "+ scaleParamName +" of "+this.getName()+" to keep the graph connected.");
                 throw new RuntimeException("Max iterations exceeded.");
             }
         }
         return new RandomVariable<>(null, b, this);
     }
 
-    public double logDensity(Boolean[] successes) { //TODO
+    public double logDensity(Boolean[] successes) {
         double logP = 0.0;
         for (int i = 0; i < successes.length; i++) {
             logP += successes[i] ? Math.log(p[i]) : Math.log(1-p[i]);
@@ -130,9 +134,10 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
     @Override
     public Map<String, Value> getParams() {
         return new TreeMap<>() {{
-            put(ratesParamName, rates);
+            put(numStatesParamName, numStates);
+            if (Q != null) put(empiricalQParamName, Q);
+            put(sensitivityParamName, k);
             put(scaleParamName, a);
-            put(shapeParamName, k);
             put(symmetricParamName, symmetric);
         }};
     }
@@ -140,14 +145,17 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
     @Override
     public void setParam(String paramName, Value value) {
         switch (paramName) {
-            case ratesParamName:
-                rates = value;
+            case numStatesParamName:
+                numStates = value;
+                break;
+            case empiricalQParamName:
+                Q = value;
+                break;
+            case sensitivityParamName:
+                k = value;
                 break;
             case scaleParamName:
                 a = value;
-                break;
-            case shapeParamName:
-                k = value;
                 break;
             case symmetricParamName:
                 symmetric = value;
@@ -159,16 +167,47 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
         super.setParam(paramName, value); // constructDistribution
     }
 
-    public Value<Double[]> getRates() {
-        return getParams().get(ratesParamName);
+    public Value<Double[][]> getEmpiricalQ() {
+        if (Q != null) return getParams().get(empiricalQParamName);
+        else return null;
+    }
+    
+    private Double[] getQValues(Double[][] q) {
+        Boolean sym = getSymmetric().value();
+        int symQ = sym ? 2 : 1;
+        int n = getNumStates().value();
+        Double[] r = new Double[(n * n - n)/symQ];
+        int x = 0;
+        double sum = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i==j) continue;
+                if (sym & j>i) continue;
+                r[x] = q[i][j];
+                sum += r[x];
+                x++;
+            }
+        }
+
+        x = 0;
+        for (int i = 0; i < r.length; i++) {
+            r[x] /= sum;
+            x++;
+        }
+
+        return r;
+    }
+
+    public Value<Integer> getNumStates() {
+        return getParams().get(numStatesParamName);
+    }
+
+    public Value<Number> getSensitivity() {
+        return getParams().get(sensitivityParamName);
     }
 
     public Value<Number> getScale() {
         return getParams().get(scaleParamName);
-    }
-
-    public Value<Number> getShape() {
-        return getParams().get(shapeParamName);
     }
 
     public Value<Boolean> getSymmetric() {

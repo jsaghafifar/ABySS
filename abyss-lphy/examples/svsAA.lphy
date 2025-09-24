@@ -1,8 +1,9 @@
-λ ~ LogNormal(meanlog=3, sdlog=0.2);
-ψ ~ Yule(lambda=λ, n=16);
-rates ~ Dirichlet(conc=rep(element=1.0,times=380));
+λ ~ LogNormal(meanlog=1.5, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=20);
+rates ~ Dirichlet(conc=rep(element=1.0,times=190));
 k ~ LogNormal(meanlog=0.5, sdlog=0.2);
-a ~ LogNormal(meanlog=2.0, sdlog=0.5);
-indicators ~ ConnectedSVS(rates=rates, scale=a, shape=k);
-Q = nonReversible(rates=rates, indicators=indicators);
-D ~ PhyloCTMC(L=200, Q=Q, tree=ψ, dataType=aminoAcids());
+a ~ LogNormal(meanlog=0.5, sdlog=0.5);
+indicators ~ ConnectedSVS(states=20, sens=k, scale=a, symmetric=true);
+freq ~ Dirichlet(conc=rep(4.0,20));
+Q = nonReversible(rates=rates, freq=freq, indicators=indicators, symmetric=true);
+D ~ PhyloCTMC(L=1000, Q=Q, tree=ψ, dataType=aminoAcids());
