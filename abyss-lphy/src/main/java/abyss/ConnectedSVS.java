@@ -44,20 +44,19 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
         super();
         this.numStates = numStates;
 
-        if (Q != null) {
-            this.Q = Q;
-        }
+        if (Q != null) this.Q = Q;
 
         if (k != null) {
-            if (k.value().doubleValue() > 0) {
-                this.k = k;
-            } else throw new IllegalArgumentException(sensitivityParamName +" must be over 0.");
+            if (Q != null) {
+                if (k.value().doubleValue() > 0) this.k = k;
+                else throw new IllegalArgumentException(sensitivityParamName +" must be over 0.");
+            } else throw new IllegalArgumentException(sensitivityParamName +" should not be specified when "+
+                    empiricalQParamName+" is not specified.");
         } else this.k = new Value(1.0,null);
 
         if (a != null) {
-            if (a.value().doubleValue() > 0) {
-                this.a = a;
-            } else throw new IllegalArgumentException(scaleParamName +" must be over 0.");
+            if (a.value().doubleValue() > 0) this.a = a;
+            else throw new IllegalArgumentException(scaleParamName +" must be over 0.");
         } else this.a = new Value(1.0,null);
 
         setParam(symmetricParamName, Objects.requireNonNullElseGet(symmetric, () -> new Value(null, false)));
@@ -79,6 +78,7 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
         if (getEmpiricalQ() != null) {
             q = getEmpiricalQ().value();
         } else {
+            // uninformed Bernoulli: each indicator will have equal probability of being active
             for (int i = 0; i < n; i++) {
                 Arrays.fill(q[i], 1.0);
             }
@@ -93,8 +93,8 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
         p = new double[r.length];
         for (int i = 0; i < p.length; i++) {
             double x = Math.log(p.length * r[i]);
-            x *= -k; // scaled
-            p[i] = a/(a + FastMath.exp(x));
+            x *= -k; // sensitivity to empirical Q input is applied
+            p[i] = a/(a + FastMath.exp(x)); // probability of indicator scaled
         }
         while (!connectedGraph) {
             int successes = 0;
@@ -112,11 +112,11 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
             iter++;
             if (!connectedGraph && iter % (MAX_TRIES/10)==0 && iter < MAX_TRIES) {
                 LoggerUtils.log.warning("Graph not connected after " + iter + " iterations. " +
-                        "Consider increasing "+ scaleParamName +" of "+this.getName()+".");
+                        "Consider increasing "+ scaleParamName +".");
             }
             if (!connectedGraph && iter >= MAX_TRIES) {
                 LoggerUtils.log.severe("Max iterations exceeded! " +
-                        "Try increasing "+ scaleParamName +" of "+this.getName()+" to keep the graph connected.");
+                        "Try increasing "+ scaleParamName +" to keep the graph connected.");
                 throw new RuntimeException("Max iterations exceeded.");
             }
         }
@@ -171,32 +171,6 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
         if (Q != null) return getParams().get(empiricalQParamName);
         else return null;
     }
-    
-    private Double[] getQValues(Double[][] q) {
-        Boolean sym = getSymmetric().value();
-        int symQ = sym ? 2 : 1;
-        int n = getNumStates().value();
-        Double[] r = new Double[(n * n - n)/symQ];
-        int x = 0;
-        double sum = 0;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (i==j) continue;
-                if (sym & j>i) continue;
-                r[x] = q[i][j];
-                sum += r[x];
-                x++;
-            }
-        }
-
-        x = 0;
-        for (int i = 0; i < r.length; i++) {
-            r[x] /= sum;
-            x++;
-        }
-
-        return r;
-    }
 
     public Value<Integer> getNumStates() {
         return getParams().get(numStatesParamName);
@@ -212,6 +186,35 @@ public class ConnectedSVS extends ParametricDistribution<Boolean[]> implements S
 
     public Value<Boolean> getSymmetric() {
         return getParams().get(symmetricParamName);
+    }
+
+    private Double[] getQValues(Double[][] q) {
+        Boolean sym = getSymmetric().value();
+        int symQ = sym ? 2 : 1;
+        int n = getNumStates().value();
+
+        // construct rate matrix from empirical Q input
+        Double[] r = new Double[(n * n - n)/symQ];
+        int x = 0;
+        double sum = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i==j) continue;
+                if (sym & j>i) continue;
+                r[x] = q[i][j];
+                sum += r[x];
+                x++;
+            }
+        }
+
+        // normalise rates
+        x = 0;
+        for (int i = 0; i < r.length; i++) {
+            r[x] /= sum;
+            x++;
+        }
+
+        return r;
     }
 
 

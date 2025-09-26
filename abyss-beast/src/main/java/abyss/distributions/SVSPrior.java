@@ -22,7 +22,7 @@ import java.util.Random;
 public class SVSPrior extends Distribution {
 
     final public Input<RealParameter> scaleInput = new Input<>("scale", "probability scale parameter.", Input.Validate.REQUIRED);
-    final public Input<RealParameter> sensitivityInput = new Input<>("sens", "probability sensitivity parameter.", Input.Validate.REQUIRED);
+    final public Input<RealParameter> sensitivityInput = new Input<>("sens", "probability sensitivity parameter.", Input.Validate.OPTIONAL);
     final public Input<BooleanParameter> indicatorsInput = new Input<>("indicators", "the results of a series of bernoulli trials.", Input.Validate.REQUIRED);
     final public Input<Integer> nrOfStatesInput = new Input<>("nrOfStates", "number of states being used in Q matrix.", Input.Validate.REQUIRED);
     final public Input<RealParameter> empiricalQInput = new Input<>("empiricalQ", "empirical Q matrix informing bernoulli trials.", Input.Validate.OPTIONAL);
@@ -31,22 +31,26 @@ public class SVSPrior extends Distribution {
     public double calculateLogP() {
         this.logP = 0.0;
         double a = this.scaleInput.get().getValue();
-        double k = this.sensitivityInput.get().getValue();
+        double k;
+        if (this.sensitivityInput.get() != null)
+            k = this.sensitivityInput.get().getValue();
+        else k = 1.0;
+
         Boolean[] indicators = this.indicatorsInput.get().getValues();
         int nrOfStates = this.nrOfStatesInput.get();
 
         Double[][] q = new Double[nrOfStates][nrOfStates];
         for (int i = 0; i < nrOfStates; i++) {
             if (this.empiricalQInput.get() != null) q[i] = this.empiricalQInput.get().getRowValues(i);
-            else Arrays.fill(q[i], 1.0);
+            else Arrays.fill(q[i], 1.0); // uninformed Bernoulli: each indicator will have equal probability of being active
         }
         Double[] rates = getQValues(q);
 
         double[] p = new double[rates.length];
         for (int i = 0; i < p.length; i++) {
             double x = Math.log(p.length * rates[i]);
-            x *= -k; // scaled
-            p[i] = a/(a + FastMath.exp(x));
+            x *= -k; // sensitivity to empirical Q input is applied
+            p[i] = a/(a + FastMath.exp(x)); // probability of indicator scaled
             if (p[i] < 0 || p[i] > 1)
                 return Double.NEGATIVE_INFINITY;
         }
@@ -99,6 +103,8 @@ public class SVSPrior extends Distribution {
         Boolean sym = this.isSymmetricInput.get();
         int symQ = sym ? 2 : 1;
         int n = this.nrOfStatesInput.get();
+
+        // construct rate matrix from empirical Q input
         Double[] r = new Double[(n * n - n)/symQ];
         int x = 0;
         double sum = 0;
@@ -112,6 +118,7 @@ public class SVSPrior extends Distribution {
             }
         }
 
+        // normalise rates
         x = 0;
         for (int i = 0; i < r.length; i++) {
             r[x] /= sum;
@@ -129,5 +136,9 @@ public class SVSPrior extends Distribution {
             throw new RuntimeException("Indicators must have " +
                     (nrOfStates * nrOfStates - nrOfStates)/symQ + " dimension, based on specified number of states.");
         }
+
+        if (this.sensitivityInput.get() != null)
+            if (this.empiricalQInput.get() == null) throw new RuntimeException("SVS probability sensitivity should" +
+                    " not be specified if it is not informed by empirical Q.");
     }
 }

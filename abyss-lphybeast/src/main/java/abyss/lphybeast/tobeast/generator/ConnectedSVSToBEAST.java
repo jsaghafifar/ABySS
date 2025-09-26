@@ -12,9 +12,9 @@ public class ConnectedSVSToBEAST implements GeneratorToBEAST<ConnectedSVS, SVSPr
 
         SVSPrior svsPrior = new SVSPrior();
         svsPrior.setInputValue("nrOfStates", generator.getNumStates().value());
-        svsPrior.setInputValue("sens", context.getBEASTObject(generator.getSensitivity()));
         svsPrior.setInputValue("scale", context.getBEASTObject(generator.getScale()));
         if (generator.getEmpiricalQ()!= null) {
+            svsPrior.setInputValue("sens", context.getBEASTObject(generator.getSensitivity()));
             svsPrior.setInputValue("empiricalQ", context.getBEASTObject(generator.getEmpiricalQ()));
         }
         svsPrior.setInputValue("indicators", value);
