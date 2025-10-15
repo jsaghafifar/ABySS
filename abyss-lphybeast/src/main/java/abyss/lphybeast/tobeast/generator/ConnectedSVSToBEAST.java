@@ -6,6 +6,10 @@ import beast.base.core.BEASTInterface;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
+/**
+ * @author Jasmine Saghafifar
+ */
+
 public class ConnectedSVSToBEAST implements GeneratorToBEAST<ConnectedSVS, SVSPrior> {
     @Override
     public SVSPrior generatorToBEAST(ConnectedSVS generator, BEASTInterface value, BEASTContext context) {

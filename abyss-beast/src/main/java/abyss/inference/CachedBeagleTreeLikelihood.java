@@ -3,6 +3,9 @@ package abyss.inference;
 import beagle.Beagle;
 import beast.base.evolution.likelihood.BeagleTreeLikelihood;
 
+/**
+ * @author Remco Bouckaert
+ */
 public class CachedBeagleTreeLikelihood extends BeagleTreeLikelihood {
 
     @Override

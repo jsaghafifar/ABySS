@@ -10,6 +10,8 @@ import lphy.core.model.annotation.GeneratorInfo;
 import lphy.core.model.annotation.ParameterInfo;
 
 /**
+ * Complex eigen methods for computing
+ * equilibrium frequencies of a Q matrix
  * @author Jasmine Saghafifar
  */
 
@@ -22,7 +24,7 @@ public class ComputeEquilibrium extends DeterministicFunction<Double[]> {
         setParam(qParamName, Q);
     }
 
-    @GeneratorInfo(name = "computeEquilibrium", description = "The sum of the elements of the given array")
+    @GeneratorInfo(name = "computeEquilibrium", description = "The equilibrium frequencies of a given Q matrix")
     public Value<Double[]> apply() {
         Double[][] Q = (Double[][])getParams().get(qParamName).value();
         return new Value<>(null, computeEquilibrium(Q), this);

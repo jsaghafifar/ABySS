@@ -8,6 +8,9 @@ import beast.base.core.Loggable;
 
 import java.io.PrintStream;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 @Description("Model logger for models with a number of mixed likelihoods.")
 public class SiteMixtureLikelihoodLogger extends BEASTObject implements Loggable {
 

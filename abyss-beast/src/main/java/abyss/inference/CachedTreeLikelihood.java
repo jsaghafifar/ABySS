@@ -2,6 +2,10 @@ package abyss.inference;
 
 import beast.base.evolution.likelihood.TreeLikelihood;
 
+/**
+ * @author Jasmine Saghafifar
+ * @author Remco Bouckaert
+ */
 public class CachedTreeLikelihood extends TreeLikelihood {
 
     protected double[] storedPatternLogLikelihoods;

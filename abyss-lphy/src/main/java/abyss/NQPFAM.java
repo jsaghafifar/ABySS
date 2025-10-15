@@ -8,6 +8,10 @@ import lphy.core.model.annotation.GeneratorInfo;
 import lphy.core.model.annotation.ParameterInfo;
 import lphy.core.model.datatype.DoubleArray2DValue;
 
+/**
+ * Non-reversible empirical amino acid Q matrix based on PFAM data
+ * @author Jasmine Saghafifar
+ */
 @Citation(value="Dang CC, Minh BQ, McShea H, Masel J, James JE, Vinh LS, Lanfear R. "+
         "nQMaker: Estimating Time Nonreversible Amino Acid Substitution Models, " +
         "Sys Biol, 2022, vol. 71 (pg. 1110-1123)",

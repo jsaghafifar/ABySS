@@ -9,6 +9,9 @@ import lphy.core.model.Value;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 public class InformedDirichletToBEAST implements GeneratorToBEAST<InformedDirichlet, Prior> {
     @Override
     public Prior generatorToBEAST(InformedDirichlet generator, BEASTInterface value, BEASTContext context) {

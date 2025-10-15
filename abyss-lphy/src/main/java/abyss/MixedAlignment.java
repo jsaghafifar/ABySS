@@ -16,6 +16,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
+ * Simulates model averaging and/or site mixture as a single alignment
  * @author Jasmine Saghafifar
  */
 public class MixedAlignment implements GenerativeDistribution<Alignment> {

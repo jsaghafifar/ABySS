@@ -12,6 +12,9 @@ import lphybeast.GeneratorToBEAST;
 
 import java.util.Arrays;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 public class ComputeEquilibriumToBEAST implements GeneratorToBEAST<ComputeEquilibrium, Prior> {
     @Override
     public Prior generatorToBEAST(ComputeEquilibrium generator, BEASTInterface value, BEASTContext context) {

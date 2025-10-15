@@ -13,6 +13,9 @@ import org.apache.commons.math3.util.FastMath;
 import java.io.PrintStream;
 import java.util.Arrays;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 @Description("Site logger for models with a number of mixed likelihoods.")
 public class SiteModelLogger extends BEASTObject implements Loggable {
 

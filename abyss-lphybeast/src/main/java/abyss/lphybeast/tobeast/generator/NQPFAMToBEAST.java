@@ -7,6 +7,9 @@ import abyss.NQPFAM;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
+/**
+ * @author Jasmine Saghafifar
+ */
 public class NQPFAMToBEAST implements GeneratorToBEAST<NQPFAM, ComplexSubstitutionModel> {
     @Override
     public ComplexSubstitutionModel generatorToBEAST(NQPFAM nqpfam, BEASTInterface value, BEASTContext context) {

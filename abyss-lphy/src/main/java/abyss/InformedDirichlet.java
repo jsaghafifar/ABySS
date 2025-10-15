@@ -15,6 +15,7 @@ import java.util.TreeMap;
 
 /**
  * Dirichlet distribution prior informed by empirical rates/frequencies.
+ * @author Jasmine Saghafifar
  */
 public class InformedDirichlet extends ParametricDistribution<Double[]> {
 

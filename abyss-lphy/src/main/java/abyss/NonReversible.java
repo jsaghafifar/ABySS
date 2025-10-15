@@ -12,6 +12,10 @@ import lphy.core.model.datatype.DoubleArray2DValue;
 
 import java.util.Arrays;
 
+/**
+ * Q matrix with optional nonreversibility and SVS rate indicators
+ * @author Jasmine Saghafifar
+ */
 public class NonReversible extends RateMatrix {
     public static final String indicatorsParamName = "indicators";
     protected static final String ratesParamName = SubstModelParamNames.RatesParamName;
@@ -24,7 +28,7 @@ public class NonReversible extends RateMatrix {
                          @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.", optional = true) Value<Double[]> freq,
                          @ParameterInfo(name = indicatorsParamName, narrativeName = "rate indicators", description = "a boolean for each rate to indicate the presence or absence of transition matrix entries", optional=true) Value<Boolean[]> indicators,
                          @ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate,
-                         @ParameterInfo(name = symmetricParamName, narrativeName = "", description = "", optional = true) Value<Boolean> symmetric) {
+                         @ParameterInfo(name = symmetricParamName, narrativeName = "Q matrix symmetry", description = "whether Q is time-reversible. default false", optional = true) Value<Boolean> symmetric) {
         super(meanRate);
 
 
