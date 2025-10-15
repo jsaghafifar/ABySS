@@ -23,33 +23,33 @@ import java.util.List;
 public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABySSubstitutionModel> {
     @Override
     public ABySSubstitutionModel generatorToBEAST(NonReversible nq, BEASTInterface value, BEASTContext context) {
-
         ABySSubstitutionModel beastNQ = new ABySSubstitutionModel();
         int numStates;
-
         Value<Boolean> symmetric = nq.getSymmetric();
         Value<Double[]> rates = nq.getRates();
         RealParameter ratesParameter = (RealParameter)context.getBEASTObject(rates);
 
-        RealParameter freqParameter;
+        // get number of states for keys
         if (symmetric.value()) {
-            Value<Double[]> freqs = nq.getFreq();
-            freqParameter = (RealParameter)context.getBEASTObject(freqs);
-            numStates = freqs.value().length;
-            char[] states = getStateNames(context, numStates);
-            String stateNames = new String(states).replace("", " ").trim();
-            beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
+            numStates = nq.getFreq().value().length;
         } else {
             double root = (-1 - Math.sqrt(1+4* rates.value().length))/2;
             numStates = (int) Math.abs(root); // TODO add optional numStates param to lphy and beast classes?
         }
 
+        // make keys for freq and rates
         char[] states = getStateNames(context, numStates);
+        String stateNames = new String(states).replace("", " ").trim();
         String keys = getRateKeys(states, numStates, symmetric.value());
-
         String[] statesList = new String[states.length];
         for (int i = 0; i < states.length; i++) {
             statesList[i] = String.valueOf(states[i]);
+        }
+
+        // init reversible Q freqs
+        if (symmetric.value()) {
+            RealParameter freqParameter = (RealParameter)context.getBEASTObject(nq.getFreq());
+            beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
         }
 
         ratesParameter.setInputValue("keys", keys);
@@ -72,7 +72,8 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         beastNQ.setInputValue("rates", ratesParameter);
         beastNQ.setInputValue("symmetric", symmetric.value());
         beastNQ.initAndValidate();
-        if (!symmetric.value()) addFreqLogger(context, beastNQ, statesList);
+        beastNQ.setID(value.getID());
+        if (!symmetric.value()) addFreqLogger(context, beastNQ, stateNames, value.getID());
 
         return beastNQ;
     }
@@ -103,11 +104,12 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return logConstrainedSumTransform;
     }
 
-    private void addFreqLogger(BEASTContext context, ABySSubstitutionModel model, String[] keys) {
+    private void addFreqLogger(BEASTContext context, ABySSubstitutionModel model, String keys, String id) {
         ABySSFrequencyLogger frequencyLogger = new ABySSFrequencyLogger();
         frequencyLogger.setInputValue("model", model);
-//        frequencyLogger.setInputValue("keys", keys); // TODO fix keys for freq logger
+        frequencyLogger.setInputValue("keys", keys);
         frequencyLogger.initAndValidate();
+        frequencyLogger.setID(id+"freq");
 
         context.addExtraLoggable(frequencyLogger);
     }

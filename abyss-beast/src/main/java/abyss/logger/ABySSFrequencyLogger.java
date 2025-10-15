@@ -5,6 +5,9 @@ import beast.base.core.*;
 import beast.base.inference.CalculationNode;
 
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Jasmine Saghafifar
@@ -13,9 +16,9 @@ import java.io.PrintStream;
 @Description("Equilibrium frequency logger")
 public class ABySSFrequencyLogger extends CalculationNode implements Loggable, Function {
     final public Input<ABySSubstitutionModel> modelInput;
-    final public Input<String[]> keysInput;
+    final public Input<String> keysInput;
     protected ABySSubstitutionModel model;
-    protected String[] keys;
+    protected List<String> keys;
     private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
     public ABySSFrequencyLogger() {
@@ -25,17 +28,24 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, F
 
     public void initAndValidate() {
         this.model = this.modelInput.get();
-        this.keys = this.keysInput.get();
+
+        if (this.keysInput.get() != null) {
+            String[] keysArr = keysInput.get().split(" ");
+            List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
+            if (keys.size() != getDimension())
+                throw new IllegalArgumentException("For 1D array, keys must have the same length as dimension ! " +
+                        "Dimension = " + getDimension() + ", but keys.size() = " + keys.size());
+            this.keys = keys;
+        }
     }
 
     public void init(PrintStream out) {
         // substModel + freq + state name of j = param name
-        String id = "NQfreq.";
+        String id = getID();
         String stateName;
-
         for (int i = 0; i < this.model.getStateCount(); i++) {
-            stateName = this.keys != null ? keys[i] : String.valueOf(i);
-            out.print(id + stateName + "\t");
+            stateName = this.keys != null ? keys.get(i) : String.valueOf(i);
+            out.print(id + '.' + stateName + "\t");
         }
 
     }
