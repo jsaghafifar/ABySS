@@ -1,8 +1,7 @@
 λ ~ LogNormal(meanlog=3, sdlog=0.2);
 ψ ~ Yule(lambda=λ, n=16);
 rates ~ Dirichlet(conc=rep(element=1.0,times=12));
-k ~ LogNormal(meanlog=0.5, sdlog=0.2);
-a ~ LogNormal(meanlog=2.0, sdlog=0.5);
-indicators ~ ConnectedSVS(rates=rates, scale=a, shape=k);
+svsScale ~ LogNormal(meanlog=0.5, sdlog=0.2);
+indicators ~ ConnectedSVS(states=4, scale=svsScale, symmetric=false);
 Q = nonReversible(rates=rates, indicators=indicators);
 D ~ PhyloCTMC(L=200, Q=Q, tree=ψ);
