@@ -24,6 +24,7 @@ public class ConnectedSVSToBEAST implements GeneratorToBEAST<ConnectedSVS, SVSPr
         svsPrior.setInputValue("indicators", value);
         svsPrior.setInputValue("symmetric", generator.getSymmetric().value());
         svsPrior.initAndValidate();
+        svsPrior.setID(value.getID());
         return svsPrior;
     }
 

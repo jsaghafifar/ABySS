@@ -6,6 +6,7 @@ import abyss.logger.ABySSFrequencyLogger;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
+import beast.base.inference.operator.BitFlipOperator;
 import beast.base.inference.operator.kernel.Transform;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
@@ -19,6 +20,10 @@ import lphybeast.GeneratorToBEAST;
 
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * @author Jasmine Saghafifar
+ */
 
 public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABySSubstitutionModel> {
     @Override
@@ -54,20 +59,23 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
 
         ratesParameter.setInputValue("keys", keys);
         ratesParameter.initAndValidate();
+        ratesParameter.setID(rates.getId());
 
+        // add rate indicators and non-uniform operator
         if (nq.getIndicators() != null) {
             Value<Boolean[]> indicators = nq.getIndicators();
             BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
-            if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates);
             rateIndicatorParameter.setInputValue("keys", keys);
             rateIndicatorParameter.initAndValidate();
+            rateIndicatorParameter.setID(indicators.getId());
+            if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates, value.getID());
+            addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
-        } else if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, null, numStates);
-        //TODO add bitflip operator spec: uniform=false
+        } else if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, null, numStates, value.getID());
 
         List<Transform> rateTransforms = new ArrayList<>();
         rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
-        addAVMNOperator(context, rateTransforms, 10.0, "rates");
+        addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
 
         beastNQ.setInputValue("rates", ratesParameter);
         beastNQ.setInputValue("symmetric", symmetric.value());
@@ -76,6 +84,15 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         if (!symmetric.value()) addFreqLogger(context, beastNQ, stateNames, value.getID());
 
         return beastNQ;
+    }
+
+    private void addNonUniformBitFlipOperator(BEASTContext context, BooleanParameter parameter, double weight) {
+        context.addSkipOperator(parameter);
+        BitFlipOperator operator = new BitFlipOperator();
+        operator.setID(parameter.getID() + ".bitFlip");
+        operator.initByName("weight", weight, "parameter", parameter, "uniform", true);
+        operator.setID(parameter.getID() + ".bitFlip");
+        context.addExtraOperator(operator);
     }
 
     private void addAVMNOperator(BEASTContext context, List<Transform> transforms, double weight, String id) {
@@ -114,7 +131,8 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         context.addExtraLoggable(frequencyLogger);
     }
 
-    private void createEigenFriendlyQPrior(BEASTContext context, Function rates, BooleanParameter indicators, Integer numStates) {
+    private void createEigenFriendlyQPrior(BEASTContext context, Function rates, BooleanParameter indicators, Integer numStates, String id) {
+        // ensure that nonreversible Q matrix is eigen-friendly
         EigenFriendlyQPrior qPrior = new EigenFriendlyQPrior();
         qPrior.setInputValue("rates", rates);
         if (indicators != null) {
@@ -122,7 +140,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         }
         qPrior.setInputValue("nrOfStates", numStates);
         qPrior.initAndValidate();
-        qPrior.setID("eigenfriendlyQ.prior");
+        qPrior.setID("eigenfriendly"+id+".prior");
         context.addBEASTObject(qPrior, null);
 
     }
