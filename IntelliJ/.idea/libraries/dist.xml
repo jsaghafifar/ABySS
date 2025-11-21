@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="dist">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../beast2/build/dist/beast.test.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../beast2/build/dist/launcher.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../beast2/build/dist/BEAST.base.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../beast2/build/dist/BEAST.base.src.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../beast2/build/dist/test.beast.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../beast2/build/dist/launcher.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

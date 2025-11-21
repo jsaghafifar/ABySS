@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="package">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../beast2/release/package/BEAST.base.package.v2.7.8.zip!/" />
+      <root url="jar://$PROJECT_DIR$/../beast2/release/package/BEAST.base.package.v2.7.7.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

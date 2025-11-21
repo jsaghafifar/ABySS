@@ -2,6 +2,8 @@
 <project version="4">
   <component name="AntConfiguration">
     <defaultAnt name="Apache Ant version 1.10.15" />
-    <buildFile url="file://$PROJECT_DIR$/build.xml" />
+    <buildFile url="file://$PROJECT_DIR$/build.xml">
+      <antReference bundledAnt="true" />
+    </buildFile>
   </component>
 </project>
