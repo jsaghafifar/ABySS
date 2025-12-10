@@ -10,12 +10,15 @@
         <provider classname="abyss.distributions.PseudoPrior"/>
         <provider classname="abyss.distributions.SVSPrior"/>
         <provider classname="abyss.inference.AbyssSVS"/>
-        <provider classname="abyss.inference.CachedTreeLikelihood"/>
         <provider classname="abyss.inference.CachedBeagleTreeLikelihood"/>
+        <provider classname="abyss.inference.CachedTreeLikelihood"/>
         <provider classname="abyss.substitutionmodel.ABySSubstitutionModel"/>
-        <provider classname="abyss.logger.ABySSFrequencyLogger"/>
         <provider classname="abyss.substitutionmodel.ABySSModelAveraging"/>
+        <provider classname="abyss.logger.ABySSFrequencyLogger"/>
         <provider classname="abyss.logger.AlignmentModelLogger"/>
+        <provider classname="abyss.logger.DetailedBalanceLogger"/>
+        <provider classname="abyss.logger.NetFluxLogger"/>
+        <provider classname="abyss.logger.RootMeanSquareLogger"/>
         <provider classname="abyss.logger.SiteMixtureLikelihoodLogger"/>
         <provider classname="abyss.logger.SiteModelLogger"/>
     </service>
