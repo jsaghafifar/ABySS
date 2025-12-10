@@ -54,8 +54,8 @@ public class NetFluxLogger extends CalculationNode implements Loggable, Function
 
         for (int[] cycle : cycles) {
             String cycleName = "";
-            for (int j = 0; j < cycle.length; j++) {
-                String step = states[cycle[j]];
+            for (int i : cycle) {
+                String step = states[i];
                 cycleName = cycleName.concat(step);
             }
 
