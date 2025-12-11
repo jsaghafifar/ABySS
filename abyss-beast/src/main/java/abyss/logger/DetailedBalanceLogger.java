@@ -37,9 +37,9 @@ public class DetailedBalanceLogger extends CalculationNode implements Loggable, 
         if (this.keysInput.get() != null) {
             String[] keysArr = keysInput.get().split(" ");
             List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
-            if (this.keys.size() != getDimension())
+            if (keys.size() != getDimension())
                 throw new IllegalArgumentException("Number of keys must match dimension. " +
-                        "Dimension = " + getDimension() + ", but keys.size() = " + this.keys.size());
+                        "Dimension = " + getDimension() + ", but keys.size() = " + keys.size());
             this.keys = keys;
         }
     }
@@ -48,7 +48,7 @@ public class DetailedBalanceLogger extends CalculationNode implements Loggable, 
         // logger id + rate name = param name
         String id = getID();
         String rateName;
-        for (int i = 0; i < this.model.getStateCount(); i++) {
+        for (int i = 0; i < getDimension(); i++) {
             rateName = this.keys != null ? keys.get(i) : String.valueOf(i);
             out.print(id + '.' + rateName + "\t");
         }
@@ -57,7 +57,7 @@ public class DetailedBalanceLogger extends CalculationNode implements Loggable, 
 
     public void log(long sample, PrintStream out) {
         double[] p = getDoubleValues();
-        for (int i = 0; i < this.model.getStateCount(); i++) {
+        for (int i = 0; i < getDimension(); i++) {
             out.print(p[i] + "\t");
         }
 
