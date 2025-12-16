@@ -67,6 +67,7 @@ public class DetailedBalanceLogger extends CalculationNode implements Loggable, 
         int nrOfStates = model.getStateCount();
         double[] d = new double[(nrOfStates*nrOfStates-nrOfStates)/2];
         model.setupRateMatrix();
+        this.equilibriumFreqs = model.getFrequencies();
         double[][] Q = model.getRateMatrix();
 
         // deviations in the detailed balance property (Q_ij*pi_i=Q_ji*pi_j)
