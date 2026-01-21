@@ -1,6 +1,9 @@
-λ ~ LogNormal(meanlog=3, sdlog=0.2);
-ψ ~ Yule(lambda=λ, n=16);
+λ ~ LogNormal(meanlog=3.0, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=40);
+σ ~ LogNormal(meanlog=-1,sdlog=0.4);
+branchRates ~ UCLN_Mean1(tree=ψ, uclnSigma=σ);
+uclnMean ~ LogNormal(meanlog=-4.0,sdlog=0.2);
 rates ~ Dirichlet(conc=rep(1.0,6));
-freq ~ Dirichlet(conc=rep(1.0,4));
+freq ~ Dirichlet(conc=rep(4.0,4));
 Q = nonReversible(rates=rates, freq=freq, symmetric=true);
-D ~ PhyloCTMC(L=200, Q=Q, tree=ψ);
+D ~ PhyloCTMC(L=500, Q=Q, tree=ψ, branchRates=branchRates, mu=uclnMean);

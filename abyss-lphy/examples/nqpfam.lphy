@@ -1,3 +1,6 @@
 λ ~ LogNormal(meanlog=3, sdlog=0.2);
-ψ ~ Yule(lambda=λ, n=16);
-D ~ PhyloCTMC(L=200, Q=nqpfam(), tree=ψ, dataType=aminoAcids());
+ψ ~ Yule(lambda=λ, n=400);
+σ ~ LogNormal(meanlog=-1,sdlog=0.4);
+branchRates ~ UCLN_Mean1(tree=ψ, uclnSigma=σ);
+uclnMean ~ LogNormal(meanlog=-4.0,sdlog=0.2);
+D ~ PhyloCTMC(L=500, Q=nqpfam(), tree=ψ, dataType=aminoAcids(), branchRates=branchRates, mu=uclnMean);
