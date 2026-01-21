@@ -3,6 +3,9 @@ package abyss.lphybeast.tobeast.generator;
 import abyss.MixedAlignment;
 import abyss.distributions.EigenFriendlyQPrior;
 import abyss.logger.ABySSFrequencyLogger;
+import abyss.logger.DetailedBalanceLogger;
+import abyss.logger.NetFluxLogger;
+import abyss.logger.RootMeanSquareLogger;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
@@ -82,6 +85,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         beastNQ.initAndValidate();
         beastNQ.setID(value.getID());
         if (!symmetric.value()) addFreqLogger(context, beastNQ, stateNames, value.getID());
+        addNonRevLoggers(context, beastNQ, getRateKeys(states, numStates, true), stateNames, numStates);
 
         return beastNQ;
     }
@@ -129,6 +133,35 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         frequencyLogger.setID(id+"freq");
 
         context.addExtraLoggable(frequencyLogger);
+    }
+
+    private void addNonRevLoggers(BEASTContext context, ABySSubstitutionModel model, String keys, String states, Integer numStates) {
+        DetailedBalanceLogger balancesLogger = new DetailedBalanceLogger();
+        balancesLogger.setInputValue("model", model);
+        balancesLogger.setInputValue("keys", keys);
+        balancesLogger.initAndValidate();
+        RootMeanSquareLogger balanceLogger = new RootMeanSquareLogger();
+        balanceLogger.setInputValue("logger", balancesLogger);
+        balanceLogger.initAndValidate();
+        balanceLogger.setID("balance");
+
+        context.addExtraLoggable(balancesLogger);
+        context.addExtraLoggable(balanceLogger);
+
+        if (numStates==4) {
+            NetFluxLogger fluxesLogger = new NetFluxLogger();
+            fluxesLogger.setInputValue("model", model);
+            fluxesLogger.setInputValue("states", states);
+            fluxesLogger.initAndValidate();
+            RootMeanSquareLogger fluxLogger = new RootMeanSquareLogger();
+            fluxLogger.setInputValue("logger", balancesLogger);
+            fluxLogger.initAndValidate();
+            fluxLogger.setID("flux");
+
+            context.addExtraLoggable(fluxesLogger);
+            context.addExtraLoggable(fluxLogger);
+        }
+
     }
 
     private void createEigenFriendlyQPrior(BEASTContext context, Function rates, BooleanParameter indicators, Integer numStates, String id) {
