@@ -76,7 +76,7 @@ public class NonReversible extends RateMatrix {
     @Override
     public boolean canReturnComplexDiagonalization() { return !getSymmetric().value(); }
 
-    private static void setupUnnormNonrevQ(Double[][] Q, Double[] r, Boolean[] b, int numStates) {
+    private static void setupRelativeRates(Double[][] Q, Double[] r, Boolean[] b, int numStates) {
         int x = 0;
         for (int i = 0; i < numStates; i++) {
             Q[i][i] = 0.0;
@@ -106,7 +106,7 @@ public class NonReversible extends RateMatrix {
         Double[] f;
         Double[][] Q = new Double[numStates][numStates];
         if (!sym) {
-            setupUnnormNonrevQ(Q, r, b, numStates);
+            setupRelativeRates(Q, r, b, numStates);
             f = getEquilibriumFrequencies(Q, numStates);
         } else {
             f = getFreq().value();
