@@ -22,9 +22,6 @@ public class HIVB extends RateMatrix {
         return new DoubleArray2DValue(Q, this);
     }
 
-//    @Override
-//    public boolean canReturnComplexDiagonalization() { return true; }
-
     protected Double[][] getQ() {
         Double[] r = getRates();
         Double[] f = getFreq();
