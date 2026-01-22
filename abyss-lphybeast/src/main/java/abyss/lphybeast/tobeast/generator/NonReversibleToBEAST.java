@@ -18,6 +18,8 @@ import abyss.NonReversible;
 import jebl.evolution.sequences.SequenceType;
 import lphy.base.evolution.likelihood.PhyloCTMC;
 import lphy.core.model.Value;
+import lphy.core.vectorization.array.BooleanArray;
+import lphy.core.vectorization.array.DoubleArray;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
@@ -68,13 +70,18 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             rateIndicatorParameter.initAndValidate();
             rateIndicatorParameter.setID(indicators.getId());
             if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates, value.getID());
-            addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
+
+            if (!(nq.getRates().getGenerator() instanceof BooleanArray))
+                addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
+
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
         } else if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, null, numStates, value.getID());
 
-        List<Transform> rateTransforms = new ArrayList<>();
-        rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
-        addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
+        if (!(nq.getRates().getGenerator() instanceof DoubleArray)) {
+            List<Transform> rateTransforms = new ArrayList<>();
+            rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
+            addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
+        }
 
         beastNQ.setInputValue("rates", ratesParameter);
         beastNQ.setInputValue("symmetric", symmetric.value());
