@@ -44,7 +44,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             numStates = nq.getFreq().value().length;
         } else {
             double root = (-1 - Math.sqrt(1+4* rates.value().length))/2;
-            numStates = (int) Math.abs(root); // TODO add optional numStates param to lphy and beast classes?
+            numStates = (int) Math.abs(root);
         }
 
         // make keys for freq and rates
@@ -75,7 +75,8 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
                 addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
 
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
-        } else if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, null, numStates, value.getID());
+        } else if (!symmetric.value())
+            createEigenFriendlyQPrior(context, ratesParameter, null, numStates, value.getID());
 
         if (!(nq.getRates().getGenerator() instanceof DoubleArray)) {
             List<Transform> rateTransforms = new ArrayList<>();
@@ -160,15 +161,6 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         context.addExtraOperator(operator);
     }
 
-    private Transform addLogTransform(RealParameter parameter) {
-        List<Function> logFunc = new ArrayList<>();
-        logFunc.add(parameter);
-        Transform.LogTransform logTransform = new Transform.LogTransform();
-        logTransform.initByName("f", logFunc);
-        logTransform.setID("logTrans."+parameter.getID());
-        return logTransform;
-    }
-
     private Transform addLogConstrainedSumTransform(RealParameter parameter) {
         List<Function> logFunc = new ArrayList<>();
         logFunc.add(parameter);
@@ -183,7 +175,8 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         frequencyLogger.setInputValue("model", model);
         frequencyLogger.setInputValue("keys", keys);
         frequencyLogger.initAndValidate();
-        frequencyLogger.setID(id+"freq");
+        if (context.getAlignments().get(0).getGenerator() instanceof MixedAlignment)
+        frequencyLogger.setID(id+".equilibrium.freq"); else frequencyLogger.setID("equilibrium.freq");
 
         context.addExtraLoggable(frequencyLogger);
     }
@@ -193,6 +186,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         balancesLogger.setInputValue("model", model);
         balancesLogger.setInputValue("keys", keys);
         balancesLogger.initAndValidate();
+        balancesLogger.setID("balances");
         RootMeanSquareLogger balanceLogger = new RootMeanSquareLogger();
         balanceLogger.setInputValue("logger", balancesLogger);
         balanceLogger.initAndValidate();
@@ -206,6 +200,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             fluxesLogger.setInputValue("model", model);
             fluxesLogger.setInputValue("states", states);
             fluxesLogger.initAndValidate();
+            fluxesLogger.setID("fluxes");
             RootMeanSquareLogger fluxLogger = new RootMeanSquareLogger();
             fluxLogger.setInputValue("logger", balancesLogger);
             fluxLogger.initAndValidate();
