@@ -5,6 +5,6 @@ branchRates ~ UCLN_Mean1(tree=ψ, uclnSigma=σ);
 uclnMean ~ LogNormal(meanlog=-4.0,sdlog=0.2);
 rates ~ Dirichlet(conc=rep(element=1.0,times=380));
 svsScale ~ LogNormal(meanlog=0.5, sdlog=0.5);
-indicators ~ ConnectedSVS(states=20, scale=svsScale, symmetric=true);
+indicators ~ ConnectedSVS(states=20, scale=svsScale, symmetric=false);
 Q = nonReversible(rates=rates, indicators=indicators);
 D ~ PhyloCTMC(L=500, Q=Q, tree=ψ, dataType=aminoAcids(), branchRates=branchRates, mu=uclnMean);

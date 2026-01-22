@@ -1,5 +1,5 @@
-λ ~ LogNormal(meanlog=3, sdlog=0.2);
-ψ ~ Yule(lambda=λ, n=400);
+λ ~ LogNormal(meanlog=3.0, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=40);
 σ ~ LogNormal(meanlog=-1,sdlog=0.4);
 branchRates ~ UCLN_Mean1(tree=ψ, uclnSigma=σ);
 uclnMean ~ LogNormal(meanlog=-4.0,sdlog=0.2);
