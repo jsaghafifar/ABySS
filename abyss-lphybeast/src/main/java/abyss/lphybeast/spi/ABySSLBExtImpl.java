@@ -47,11 +47,7 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
 
     @Override
     public List<Class<? extends Generator>> getExcludedGenerator() {
-        return List.of(NQPFAMRates.class, NQPFAMFreqs.class,
-                FLURates.class, FLUFreqs.class,
-                HIVBRates.class, HIVBFreqs.class,
-                HIVWRates.class, HIVWFreqs.class,
-                Slice.class);
+        return List.of(Slice.class);
     }
 
     @Override
