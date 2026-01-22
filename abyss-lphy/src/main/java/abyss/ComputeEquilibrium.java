@@ -30,7 +30,7 @@ public class ComputeEquilibrium extends DeterministicFunction<Double[]> {
         return new Value<>(null, computeEquilibrium(Q), this);
     }
 
-    private Double[] computeEquilibrium(Double[][] Q) {
+    public static Double[] computeEquilibrium(Double[][] Q) {
         int numStates = Q.length;
 
         // Q assumed to be nonreversible, so complex eigen decomposition

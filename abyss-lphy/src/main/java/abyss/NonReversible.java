@@ -12,6 +12,8 @@ import lphy.core.model.datatype.DoubleArray2DValue;
 
 import java.util.Arrays;
 
+import static abyss.ComputeEquilibrium.computeEquilibrium;
+
 /**
  * Q matrix with optional nonreversibility and SVS rate indicators
  * @author Jasmine Saghafifar
@@ -21,8 +23,6 @@ public class NonReversible extends RateMatrix {
     protected static final String ratesParamName = SubstModelParamNames.RatesParamName;
     protected static final String freqParamName = SubstModelParamNames.FreqParamName;
     public static final String symmetricParamName = "symmetric";
-
-    private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
     public NonReversible(@ParameterInfo(name = ratesParamName, narrativeName = "relative rates", description = "the relative rates of the substitution process.") Value<Double[]> rates,
                          @ParameterInfo(name = freqParamName, narrativeName = "base frequencies", description = "the base frequencies.", optional = true) Value<Double[]> freq,
@@ -37,28 +37,34 @@ public class NonReversible extends RateMatrix {
         if (symmetric == null) symmetric = new Value(null,false);
         setParam(symmetricParamName, symmetric);
 
-        if (symmetric.value()) {
+        Boolean sym = symmetric.value();
+        if (sym) {
             if (freq == null) throw new IllegalArgumentException("Frequencies must be specified when reversible Q matrix");
             else setParam(freqParamName, freq);
         } else if (freq != null) throw new IllegalArgumentException("Frequencies cannot be specified when nonreversible Q matrix");
 
         if (indicators != null) {
-            if (indicators.value().length != rates.value().length)
+            int indicatorsLength = indicators.value().length;
+            int ratesLength = rates.value().length;
+            if (indicatorsLength != ratesLength)
                 throw new IllegalArgumentException("Indicators must have same number of dimensions as rates.");
+            if (!SVS.Utils.isStronglyConnected(indicators.value(),getNumStates(indicatorsLength,sym),sym))
+                LoggerUtils.log.severe("Q matrix is not strongly connected. " +
+                        "Try adjusting Bernoulli or using ConnectedSVS to ensure connectivity.");
             setParam(indicatorsParamName, indicators);
         }
 
 
     }
 
-    private static int getNumStates(Value<Double[]> rates, Value<Boolean> symmetric) {
+    private static int getNumStates(int len, Boolean symmetric) {
         int numStates;
-        if (symmetric.value()) {
-            double root = (-1 - Math.sqrt(1+8* rates.value().length))/2;
+        if (symmetric) {
+            double root = (-1 - Math.sqrt(1+8* len))/2;
             if (root - (int) root < 1e-6) numStates = (int) Math.abs(root);
             else throw new IllegalArgumentException("Rates must have have (n²-n)/2 number of dimensions as frequencies.");
         } else {
-            double root = (-1 - Math.sqrt(1+4* rates.value().length))/2;
+            double root = (-1 - Math.sqrt(1+4* len))/2;
             if (root - (int) root < 1e-6) numStates = (int) Math.abs(root);
             else throw new IllegalArgumentException("Rates must have have (n²-n) number of dimensions as frequencies.");
         }
@@ -94,20 +100,19 @@ public class NonReversible extends RateMatrix {
     }
 
     protected Double[][] getQ() {
-        int numStates = getNumStates(getRates(), getSymmetric());
         Double[] r = getRates().value();
+        Boolean sym = getSymmetric().value();
+        int numStates = getNumStates(r.length, sym);
 
         Boolean[] b = new Boolean[r.length];
         if (getIndicators() != null) b = getIndicators().value();
         else Arrays.fill(b, true);
 
-        Boolean sym = getSymmetric().value();
-
         Double[] f;
         Double[][] Q = new Double[numStates][numStates];
         if (!sym) {
             setupRelativeRates(Q, r, b, numStates);
-            f = getEquilibriumFrequencies(Q, numStates);
+            f = computeEquilibrium(Q);
         } else {
             f = getFreq().value();
             int x = 0;
@@ -153,79 +158,6 @@ public class NonReversible extends RateMatrix {
             }
         }
         return Q;
-    }
-
-    private Double[] getEquilibriumFrequencies(Double[][] Qm, int numStates) {
-        double temp;
-
-        EigenSystem complexEigenSystem = new ComplexColtEigenSystem(numStates);
-        EigenDecompositionExt complexDecomposition = complexEigenSystem.decomposeMatrix(Qm);
-        double[] Eval = complexDecomposition.getEigenValues();
-        double[] evec = complexDecomposition.getEigenVectors();
-        double[] ievc = complexDecomposition.getInverseEigenVectors();
-
-        double[][] iexp = new double[numStates][numStates];
-        double[] EvalImag = new double[numStates];
-        double[][] transProbs = new double[numStates][numStates];
-        Double[] freqs = new Double[numStates];
-
-        System.arraycopy(Eval, numStates, EvalImag, 0, numStates);
-        double t = DEFAULT_BRANCH_LENGTH;
-        boolean equilibrium = false;
-
-        while (!equilibrium) {
-            for (int i = 0; i < numStates; i++) {
-                if (EvalImag[i] == 0) {
-                    // 1x1 block
-                    temp = Math.exp(t * Eval[i]);
-                    for (int j = 0; j < numStates; j++) {
-                        iexp[i][j] = ievc[i * numStates + j] * temp;
-                    }
-                } else {
-                    // 2x2 conjugate block
-                    // If A is 2x2 with complex conjugate pair eigenvalues a +/- bi, then
-                    // exp(At) = exp(at)*( cos(bt)I + \frac{sin(bt)}{b}(A - aI)).
-                    int i2 = i + 1;
-                    double b = EvalImag[i];
-                    double expat = Math.exp(t * Eval[i]);
-                    double expatcosbt = expat * Math.cos(t * b);
-                    double expatsinbt = expat * Math.sin(t * b);
-
-                    for (int j = 0; j < numStates; j++) {
-                        iexp[i][j] = expatcosbt * ievc[i * numStates + j] +
-                                expatsinbt * ievc[i2 * numStates + j];
-                        iexp[i2][j] = expatcosbt * ievc[i2 * numStates + j] -
-                                expatsinbt * ievc[i * numStates + j];
-                    }
-                    i++; // processed two conjugate rows
-                }
-            }
-
-            for (int i = 0; i < numStates; i++) {
-                for (int j = 0; j < numStates; j++) {
-                    temp = 0.0;
-                    for (int k = 0; k < numStates; k++) {
-                        temp += evec[i * numStates + k] * iexp[k][j];
-                    }
-                    transProbs[i][j] = Math.abs(temp);
-                }
-            }
-
-            boolean reached = true;
-            for (int i = 0; i < numStates; i++) {
-                freqs[i] = transProbs[0][i];
-                for (int j = 1; j < numStates; j++) {
-                    if (Math.abs(transProbs[0][i] - transProbs[j][i]) > 1e-6) {
-                        reached = false;
-                        break;
-                    }
-                }
-                if (!reached) break;
-            }
-            if (reached) equilibrium = true;
-            t *= 10;
-        }
-        return freqs;
     }
 
     public Value<Double[]> getRates() {
