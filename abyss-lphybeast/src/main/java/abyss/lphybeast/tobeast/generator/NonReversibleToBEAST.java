@@ -46,13 +46,9 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         }
 
         // make keys for freq and rates
-        char[] states = getStateNames(context, numStates);
+        char[] states = getStates(context, numStates);
         String stateNames = new String(states).replace("", " ").trim();
         String keys = getRateKeys(states, numStates, symmetric.value());
-        String[] statesList = new String[states.length];
-        for (int i = 0; i < states.length; i++) {
-            statesList[i] = String.valueOf(states[i]);
-        }
 
         // init reversible Q freqs
         if (symmetric.value()) {
@@ -88,6 +84,56 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         addNonRevLoggers(context, beastNQ, getRateKeys(states, numStates, true), stateNames, numStates);
 
         return beastNQ;
+    }
+
+    public static char[] getStates(BEASTContext context, int numStates) {
+        char[] states = new char[numStates];
+
+        if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
+                phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) ||
+                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
+                        mixedAlignment.getDataType() == SequenceType.NUCLEOTIDE)
+                && numStates == 4)
+            states = new char[] {'A', 'C', 'G', 'T'};
+        else if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
+                phyloCTMC.getDataType() == SequenceType.AMINO_ACID) ||
+                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
+                        mixedAlignment.getDataType() == SequenceType.AMINO_ACID)
+                && numStates == 20)
+            states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
+                    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
+        else {
+            for (int i=0; i<numStates; i++) {
+                states[i] = Character.forDigit(i, 10);
+            }
+        }
+        return states;
+    }
+
+    public static String getRateKeys(char[] states, int numStates, Boolean symmetric) {
+        String[] keysArray;
+        int x = 0;
+        if (!symmetric) {
+            keysArray = new String[numStates * numStates - numStates];
+            for (int i = 0; i < numStates; i++) {
+                for (int j = 0; j < numStates; j++) {
+                    if (j != i) {
+                        keysArray[x] = new String(new char[]{states[i], '.', states[j]});
+                        x++;
+                    }
+                }
+            }
+        } else {
+            keysArray = new String[(numStates * numStates - numStates)/2];
+            for (int i = 0; i < numStates; i++) {
+                for (int j = i + 1; j < numStates; j++) {
+                    keysArray[x] = new String(new char[]{states[i], '.', states[j]});
+                    x++;
+                }
+            }
+        }
+
+        return String.join(" ", keysArray);
     }
 
     private void addNonUniformBitFlipOperator(BEASTContext context, BooleanParameter parameter, double weight) {
@@ -176,56 +222,6 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         qPrior.setID("eigenfriendly"+id+".prior");
         context.addBEASTObject(qPrior, null);
 
-    }
-
-    private char[] getStateNames(BEASTContext context, int numStates) {
-        char[] states = new char[numStates];
-
-        if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
-                phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) ||
-                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
-                        mixedAlignment.getDataType() == SequenceType.NUCLEOTIDE)
-                && numStates == 4)
-            states = new char[] {'A', 'C', 'G', 'T'};
-        else if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
-                phyloCTMC.getDataType() == SequenceType.AMINO_ACID) ||
-                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
-                        mixedAlignment.getDataType() == SequenceType.AMINO_ACID)
-                && numStates == 20)
-            states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
-                    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
-        else {
-            for (int i=0; i<numStates; i++) {
-                states[i] = Character.forDigit(i, 10);
-            }
-        }
-        return states;
-    }
-
-    private String getRateKeys(char[] states, int numStates, Boolean symmetric) {
-        String[] keysArray;
-        int x = 0;
-        if (!symmetric) {
-            keysArray = new String[numStates * numStates - numStates];
-            for (int i = 0; i < numStates; i++) {
-                for (int j = 0; j < numStates; j++) {
-                    if (j != i) {
-                        keysArray[x] = new String(new char[]{states[i], '.', states[j]});
-                        x++;
-                    }
-                }
-            }
-        } else {
-            keysArray = new String[(numStates * numStates - numStates)/2];
-            for (int i = 0; i < numStates; i++) {
-                for (int j = i + 1; j < numStates; j++) {
-                    keysArray[x] = new String(new char[]{states[i], '.', states[j]});
-                    x++;
-                }
-            }
-        }
-
-        return String.join(" ", keysArray);
     }
 
     @Override
