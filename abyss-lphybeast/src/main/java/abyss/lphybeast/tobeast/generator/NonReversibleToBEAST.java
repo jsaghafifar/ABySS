@@ -94,6 +94,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return beastNQ;
     }
 
+    // static key methods
     public static char[] getStates(BEASTContext context, int numStates) {
         char[] states = new char[numStates];
 
@@ -144,6 +145,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return String.join(" ", keysArray);
     }
 
+    // private operator methods
     private void addNonUniformBitFlipOperator(BEASTContext context, BooleanParameter parameter, double weight) {
         context.addSkipOperator(parameter);
         BitFlipOperator operator = new BitFlipOperator();
@@ -170,6 +172,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return logConstrainedSumTransform;
     }
 
+    // private logger methods
     private void addFreqLogger(BEASTContext context, ABySSubstitutionModel model, String keys, String id) {
         ABySSFrequencyLogger frequencyLogger = new ABySSFrequencyLogger();
         frequencyLogger.setInputValue("model", model);
@@ -212,6 +215,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
 
     }
 
+    // private prior methods
     private void createEigenFriendlyQPrior(BEASTContext context, Function rates, BooleanParameter indicators, Integer numStates, String id) {
         // ensure that nonreversible Q matrix is eigen-friendly
         EigenFriendlyQPrior qPrior = new EigenFriendlyQPrior();
