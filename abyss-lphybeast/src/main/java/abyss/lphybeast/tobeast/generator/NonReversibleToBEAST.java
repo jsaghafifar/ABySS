@@ -1,5 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
+import abyss.ConnectedSVS;
 import abyss.MixedAlignment;
 import abyss.distributions.EigenFriendlyQPrior;
 import abyss.distributions.SVSPrior;
