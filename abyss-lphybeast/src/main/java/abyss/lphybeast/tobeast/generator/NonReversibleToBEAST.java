@@ -80,7 +80,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             rateIndicatorParameter.setID(indicators.getId());
             if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates, value.getID());
 
-            if (!(nq.getRates().getGenerator() instanceof BooleanArray))
+            if (!(indicators.getGenerator() instanceof BooleanArray | indicators.getGenerator() instanceof ConnectedSVS))
                 addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
 
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
@@ -103,7 +103,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return beastNQ;
     }
 
-    // static key methods
+    // public static methods
     public static char[] getStates(BEASTContext context, int numStates) {
         char[] states = new char[numStates];
 
@@ -154,8 +154,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return String.join(" ", keysArray);
     }
 
-    // private operator methods
-    private void addNonUniformBitFlipOperator(BEASTContext context, BooleanParameter parameter, double weight) {
+    public static void addNonUniformBitFlipOperator(BEASTContext context, BooleanParameter parameter, double weight) {
         context.addSkipOperator(parameter);
         BitFlipOperator operator = new BitFlipOperator();
         operator.setID(parameter.getID() + ".bitFlip");
@@ -164,6 +163,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         context.addExtraOperator(operator);
     }
 
+    // private operator methods
     private void addAVMNOperator(BEASTContext context, List<Transform> transforms, double weight, String id) {
         AdaptableVarianceMultivariateNormalOperator operator = new AdaptableVarianceMultivariateNormalOperator();
         operator.initByName("weight", weight,"coefficient", 1.0,"scaleFactor", 1.0,"beta", 0.05,
