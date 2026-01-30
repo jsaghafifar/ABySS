@@ -2,6 +2,7 @@ package abyss.lphybeast.tobeast.generator;
 
 import abyss.MixedAlignment;
 import abyss.distributions.EigenFriendlyQPrior;
+import abyss.distributions.SVSPrior;
 import abyss.logger.ABySSFrequencyLogger;
 import abyss.logger.DetailedBalanceLogger;
 import abyss.logger.NetFluxLogger;
@@ -65,7 +66,15 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         // add rate indicators and non-uniform operator
         if (nq.getIndicators() != null) {
             Value<Boolean[]> indicators = nq.getIndicators();
-            BooleanParameter rateIndicatorParameter = (BooleanParameter)context.getBEASTObject(indicators);
+
+            BEASTInterface bi = context.getBEASTObject(indicators);
+            BooleanParameter rateIndicatorParameter;
+            if (bi instanceof SVSPrior prior) {
+                rateIndicatorParameter = prior.indicatorsInput.get();
+            } else if (bi instanceof BooleanParameter) {
+                rateIndicatorParameter = (BooleanParameter) bi;
+            } else throw new UnsupportedOperationException();
+
             rateIndicatorParameter.setInputValue("keys", keys);
             rateIndicatorParameter.initAndValidate();
             rateIndicatorParameter.setID(indicators.getId());
