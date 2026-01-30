@@ -79,7 +79,8 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             rateIndicatorParameter.setInputValue("keys", keys);
             rateIndicatorParameter.initAndValidate();
             rateIndicatorParameter.setID(indicators.getId());
-            if (!symmetric.value()) createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates, value.getID());
+            if (!symmetric.value())
+                createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates, value.getID());
 
             if (!(indicators.getGenerator() instanceof BooleanArray | indicators.getGenerator() instanceof ConnectedSVS))
                 addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
@@ -88,7 +89,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         } else if (!symmetric.value())
             createEigenFriendlyQPrior(context, ratesParameter, null, numStates, value.getID());
 
-        if (!(nq.getRates().getGenerator() instanceof DoubleArray)) {
+        if (!(rates.getGenerator() instanceof DoubleArray)) {
             List<Transform> rateTransforms = new ArrayList<>();
             rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
             addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
