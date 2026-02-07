@@ -188,8 +188,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         frequencyLogger.setInputValue("model", model);
         frequencyLogger.setInputValue("keys", keys);
         frequencyLogger.initAndValidate();
-        if (context.getAlignments().get(0).getGenerator() instanceof MixedAlignment)
-        frequencyLogger.setID(id+".equilibrium.freq"); else frequencyLogger.setID("equilibrium.freq");
+        frequencyLogger.setID(id+".equilibrium.freq");
 
         context.addExtraLoggable(frequencyLogger);
     }
