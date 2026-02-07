@@ -20,8 +20,6 @@ import abyss.NonReversible;
 import jebl.evolution.sequences.SequenceType;
 import lphy.base.evolution.likelihood.PhyloCTMC;
 import lphy.core.model.Value;
-import lphy.core.vectorization.array.BooleanArray;
-import lphy.core.vectorization.array.DoubleArray;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
@@ -82,14 +80,15 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             if (!symmetric.value())
                 createEigenFriendlyQPrior(context, ratesParameter, rateIndicatorParameter, numStates, value.getID());
 
-            if (!(indicators.getGenerator() instanceof BooleanArray | indicators.getGenerator() instanceof ConnectedSVS))
+            if (!(indicators.getGenerator() == null | indicators.getGenerator() instanceof ConnectedSVS))
                 addNonUniformBitFlipOperator(context, rateIndicatorParameter, 2.0);
+            else context.addSkipOperator(rateIndicatorParameter);
 
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
         } else if (!symmetric.value())
             createEigenFriendlyQPrior(context, ratesParameter, null, numStates, value.getID());
 
-        if (!(rates.getGenerator() instanceof DoubleArray)) {
+        if (rates.getGenerator() != null) {
             List<Transform> rateTransforms = new ArrayList<>();
             rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
             addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
@@ -160,7 +159,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         context.addSkipOperator(parameter);
         BitFlipOperator operator = new BitFlipOperator();
         operator.setID(parameter.getID() + ".bitFlip");
-        operator.initByName("weight", weight, "parameter", parameter, "uniform", true);
+        operator.initByName("weight", weight, "parameter", parameter, "uniform", false);
         operator.setID(parameter.getID() + ".bitFlip");
         context.addExtraOperator(operator);
     }
