@@ -79,10 +79,10 @@ public class MixedTreeLikelihood extends Distribution {
             if (siteModelWeights.getDimension() != pLikelihoods.get().size())
                 throw new IllegalArgumentException("Site weights must have same dimensions as given tree likelihoods.");
             double sum = 0;
-            for (int i = 0; i < metaWeights.getDimension(); i++) {
-                sum += metaWeights.getArrayValue(i);
+            for (int i = 0; i < siteModelWeights.getDimension(); i++) {
+                sum += siteModelWeights.getArrayValue(i);
             }
-            if (Math.abs(sum - 1) > 1e-6) throw new IllegalArgumentException("Meta weights must sum to 1.");
+            if (Math.abs(sum - 1) > 1e-6) throw new IllegalArgumentException("Site weights must sum to 1.");
         } else if (!mode.equalsIgnoreCase("avg")) {
             throw new IllegalArgumentException("Site weights must be specified for site mixture model.");
         }
