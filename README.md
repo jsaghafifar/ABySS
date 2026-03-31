@@ -4,9 +4,20 @@ A BEAST2 package implementing nonreversible substitution models and novel site-m
 for simulating nonreversible substitution is also included.
 
 ## Installation instructions
-The package is still in development and does not yet have a release.
+The package is still in development and does not yet have an official release. 
 
-Before building ensure [OpenJFX 17](https://gluonhq.com/products/javafx/) and 
+To **install pre-release v0.0.1**, download and unzip within your BEAST2 library:
+```
+mkdir ~/.beast/2.7/ABySS
+cp ~/Downloads/ABySS.v0.0.1.zip ~/.beast/2.7/ABySS
+cd ~/.beast/2.7/ABySS
+unzip ABySS.v0.0.1.zip
+rm ../beauti.properties
+```
+ABySS will now be ready to run in BEAST2.
+
+
+To **build from source**, ensure [OpenJFX 17](https://gluonhq.com/products/javafx/) and 
 [Apache Ant](https://ant.apache.org/manual/install.html) are installed, along with the latest version of BEAST2.
 
 1. Clone repository and build package
