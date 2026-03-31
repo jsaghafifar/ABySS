@@ -1,9 +1,8 @@
-λ ~ LogNormal(meanlog=3, sdlog=0.2);
-ψ ~ Yule(lambda=λ, n=16);
+λ ~ LogNormal(meanlog=3.0, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=40);
+nBranches = 40*2-2;
+branchRates ~ LogNormal(meanlog=-1, sdlog=0.5, replicates=nBranches);
 rates ~ Dirichlet(conc=rep(1.0,190)); 
-freq = [0.05,0.05,0.05,0.05,0.05,
-	0.05,0.05,0.05,0.05,0.05,
-	0.05,0.05,0.05,0.05,0.05,
-	0.05,0.05,0.05,0.05,0.05];
+freq ~ Dirichlet(conc=rep(4.0,20));
 Q = nonReversible(rates=rates, freq=freq, symmetric=true);
-D ~ PhyloCTMC(L=200, Q=Q, tree=ψ, dataType=aminoAcids());
+D ~ PhyloCTMC(L=500, Q=Q, tree=ψ, dataType=aminoAcids(), branchRates=branchRates);
