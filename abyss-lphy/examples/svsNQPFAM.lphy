@@ -1,0 +1,10 @@
+λ ~ LogNormal(meanlog=3.0, sdlog=0.2);
+ψ ~ Yule(lambda=λ, n=40);
+nBranches = 40*2-2;
+branchRates ~ LogNormal(meanlog=-1, sdlog=0.5, replicates=nBranches);
+rates ~ Dirichlet(conc=rep(element=1.0,times=380));
+svsScale ~ LogNormal(meanlog=0.5, sdlog=0.5);
+svsSens ~ LogNormal(meanlog=0.5, sdlog=0.5);
+indicators ~ ConnectedSVS(states=20, scale=svsScale, empiricalQ=nqpfam(), symmetric=false);
+Q = nonReversible(rates=rates, indicators=indicators);
+D ~ PhyloCTMC(L=500, Q=Q, tree=ψ, dataType=aminoAcids(), branchRates=branchRates);
