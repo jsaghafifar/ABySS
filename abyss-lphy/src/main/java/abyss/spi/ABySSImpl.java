@@ -29,8 +29,8 @@ public class ABySSImpl extends LPhyBaseImpl {
 
     @Override
     public List<Class<? extends BasicFunction>> declareFunctions() {
-        return Arrays.asList(NonReversible.class,
-                NQPFAM.class, FLU.class, HIVB.class, HIVW.class,
+        return Arrays.asList(NonReversible.class, NQPFAM.class, FLU.class, HIVB.class, HIVW.class,
+                ClassicNonReversible.class, ClassicNQPFAM.class,
                 ComputeEquilibrium.class);
     }
 

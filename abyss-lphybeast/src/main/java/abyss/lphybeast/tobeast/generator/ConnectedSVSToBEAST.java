@@ -3,7 +3,7 @@ package abyss.lphybeast.tobeast.generator;
 import abyss.ConnectedSVS;
 import abyss.distributions.SVSPrior;
 import beast.base.core.BEASTInterface;
-import beast.base.inference.parameter.BooleanParameter;
+import beast.base.spec.inference.parameter.BoolVectorParam;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
@@ -26,7 +26,7 @@ public class ConnectedSVSToBEAST implements GeneratorToBEAST<ConnectedSVS, SVSPr
         }
         svsPrior.setInputValue("indicators", value);
         svsPrior.setInputValue("symmetric", generator.getSymmetric().value());
-        addNonUniformBitFlipOperator(context, (BooleanParameter) value, 2.0);
+        addNonUniformBitFlipOperator(context, (BoolVectorParam) value, 2.0);
         svsPrior.initAndValidate();
         svsPrior.setID(value.getID());
         return svsPrior;

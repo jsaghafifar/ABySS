@@ -1,119 +1,125 @@
 package abyss.distributions;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.inference.distribution.ParametricDistribution;
-import beast.base.inference.parameter.RealParameter;
-import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
+import beast.base.core.Log;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.distribution.TensorDistribution;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealVector;
+import beast.base.spec.type.Simplex;
+import org.apache.commons.numbers.gamma.LogGamma;
+import org.apache.commons.statistics.distribution.GammaDistribution;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Jasmine Saghafifar
  */
 
-@Description("Informed Dirichlet distribution.")
-public class InformedDirichletPrior extends ParametricDistribution {
-    final public Input<Function> alphaInput = new Input<>("alpha", "coefficients of the Dirichlet distribution", Validate.REQUIRED);
-    final public Input<RealParameter> scaleInput = new Input<>("scale", "scale of coefficients", Validate.REQUIRED);
+@Description("Informed Dirichlet distribution. Implementation not yet verified.")
+public class InformedDirichletPrior extends TensorDistribution<Simplex, Double> {
+    final public Input<RealVector<PositiveReal>> alphaInput = new Input<>("alpha", "coefficients of the Dirichlet distribution", Validate.REQUIRED);
+    final public Input<RealScalarParam<PositiveReal>> scaleInput = new Input<>("scale", "scale of coefficients", Validate.REQUIRED);
+    private GammaDistribution[] gammas;
+
+    public InformedDirichletPrior() {}
+
+    public InformedDirichletPrior(Simplex param, RealVector<PositiveReal> alpha, PositiveReal scale) {
+        try {
+            initByName("param", param, "alpha", alpha, "scale", scale);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
 
     @Override
     public void initAndValidate() {
+        refresh();
+        super.initAndValidate(); // load param here
+        if (alphaInput.get().size() != dimension())
+            throw new IllegalArgumentException("Dimensions of alpha and param should be the same, " +
+                    "but dim(alpha)=" + alphaInput.get().size() + " and dim(x)=" + dimension());
+
     }
 
     @Override
-    public Distribution getDistribution() {
-        return null;
+    public void refresh() {
+        List<Double> alpha = alphaInput.get().getElements();
+        double scale = scaleInput.get().get();
+        gammas = new GammaDistribution[alpha.size()];
+
+        for (int i = 0; i < alpha.size(); i++) {
+            if (gammas[i] == null)
+                gammas[i] = GammaDistribution.of(alpha.get(i), scale);
+
+            // Floating point comparison
+            if (Math.abs(gammas[i].getShape() - alpha.get(i)) > EPS)
+                gammas[i] = GammaDistribution.of(alpha.get(i), scale);
+        }
     }
 
-    class DirichletImpl implements ContinuousDistribution {
-        Double[] m_fAlpha;
-
-        void setAlpha(Double[] alpha) {
-            m_fAlpha = alpha;
-        }
-
-        @Override
-        public double cumulativeProbability(double x) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double inverseCumulativeProbability(double p) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double density(double x) {
-            return Double.NaN;
-        }
-
-        @Override
-        public double logDensity(double x) {
-            return Double.NaN;
-        }
-        
-    } // class DirichletImpl
-
+    @Override
+    protected double calcLogP(Double... value) {
+        return this.calcLogP(Arrays.asList(value));
+    }
 
     @Override
-    public double calcLogP(Function pX) { //TODO add scale and fixed minimum here
-        double[] alpha = alphaInput.get().getDoubleValues();
-        if (alphaInput.get().getDimension() != pX.getDimension()) {
-            throw new IllegalArgumentException("Dimensions of alpha and x should be the same, but dim(alpha)=" + alphaInput.get().getDimension()
-                    + " and dim(x)=" + pX.getDimension());
-        }
-        double logP = 0;
-        double sumAlpha = 0;
-        for (int i = 0; i < pX.getDimension(); i++) {
-            double x = pX.getArrayValue(i);
-            logP += (alpha[i] - 1) * Math.log(x);
-            logP -= org.apache.commons.math.special.Gamma.logGamma(alpha[i]);
-            sumAlpha += alpha[i];
-        }
-        logP += org.apache.commons.math.special.Gamma.logGamma(sumAlpha);
+    public double calculateLogP() {
+        // Avoid unnecessary conversions, use List<> directly for better performance
+        logP = this.calcLogP(param.getElements());
         return logP;
     }
 
-	@Override
-	public Double[][] sample(int size) {
-		int dim = alphaInput.get().getDimension();
+    private double calcLogP(List<Double> value) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
 
-        Double[] conc = new Double[dim];
-        double concSum = 0.0;
-        for (int i = 0; i < dim; i++) {
-            conc[i] = alphaInput.get().getArrayValue(i);
-            concSum += conc[i];
+        List<Double> alpha = alphaInput.get().getElements();
+        if (alpha.size() != value.size())
+            throw new IllegalArgumentException("Dimensions of alpha and param should be the same, " +
+                    "but dim(alpha)=" + alpha.size() + " and dim(x)=" + value.size());
+        double scale = scaleInput.get().get();
+
+        double logP = 0;
+        for (int i = 0; i < value.size(); i++) {
+            logP += (alpha.get(i)*scale - 1) * Math.log(value.get(i)); // a-scale or a*scale-1? check
+            logP -= LogGamma.value(alpha.get(i)*scale); // check
         }
+        double alphaSum = alpha.stream().mapToDouble(Double::doubleValue).sum();
+        alphaSum += scale*alpha.size(); // check
+        logP += LogGamma.value(alphaSum);
 
-        Double[][] samples = new Double[size][];
-        double scale = scaleInput.get().getValue();
-        double min = scale * dim / 200000;
-		for (int i = 0; i < size; i++) {
-			Double[] dirichletSample = new Double[dim];
-			double dirSum = 0.0;
-            int x = 0;
-			for (int j = 0; j < dim; j++) {
-                conc[j] /= concSum;
-                conc[j] *= scale * dim;
-				dirichletSample[j] = Randomizer.nextGamma(conc[j], 1.0);
-                if (dirichletSample[j] < min) {dirichletSample[j] = min; x++;} //TODO add check for >25% samples fixed to minimum
-				dirSum += dirichletSample[j];
-			}
-			for (int j = 0; j < dim; j++) {
-				dirichletSample[j] = dirichletSample[j] / dirSum;
-			}
-			samples[i] = dirichletSample;
+        // area = sumX^(dim-1)
+        double sumX = value.stream()              // Stream<Double>
+                .mapToDouble(Double::doubleValue) // unbox to double
+                .sum();
+        final double expectedSum = 1.0;
+        if (Math.abs(sumX - expectedSum) > 1e-6) {
+            Log.trace("sum of values (" + sumX +") differs significantly from the expected sum of values (" + expectedSum +")");
+            return Double.NEGATIVE_INFINITY;
+        }
+        logP -= (value.size() - 1) * Math.log(sumX);
 
-		}
-		return samples;
-	}
+        return logP;
+    }
+
+    @Override
+    public List sample() {
+        return List.of();
+    }
+
+    @Override
+    public Double getLowerBoundOfParameter() {
+        // all gammas have the same bounds
+        return gammas[0].getSupportLowerBound();
+    }
+
+    @Override
+    public Double getUpperBoundOfParameter() {
+        return gammas[0].getSupportUpperBound();
+    }
+
 }

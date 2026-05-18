@@ -4,8 +4,10 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.inference.distribution.Prior;
-import beast.base.inference.parameter.IntegerParameter;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.inference.distribution.TensorDistribution;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.IntVectorParam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,26 +21,26 @@ import java.util.Random;
 @Description("Pseudo prior to be used when a model is not active in model averaging.")
 public class PseudoPrior extends Distribution {
 
-    final public Input<Prior> priorInput = new Input<>("prior", "distribution to be used when model is on.", Input.Validate.REQUIRED);
-    final public Input<Prior> pseudoPriorInput = new Input<>("pseudo", "informed distribution to be used when model is off.", Input.Validate.REQUIRED);
-    final public Input<IntegerParameter> modelIndicatorInput = new Input<>("modelIndicator", "the active model.", Input.Validate.REQUIRED);
-    final public Input<IntegerParameter> modelIndexInput = new Input<>("modelIndex", "the prior's model(s), as its index in the model list.", Input.Validate.REQUIRED);
+    final public Input<TensorDistribution<?, ?>> priorInput = new Input<>("prior", "distribution to be used when model is on.", Input.Validate.REQUIRED);
+    final public Input<TensorDistribution<?, ?>> pseudoPriorInput = new Input<>("pseudo", "informed distribution to be used when model is off.", Input.Validate.REQUIRED);
+    final public Input<IntScalarParam<NonNegativeInt>> modelIndicatorInput = new Input<>("modelIndicator", "the active model.", Input.Validate.REQUIRED);
+    final public Input<IntVectorParam<NonNegativeInt>> modelIndexInput = new Input<>("modelIndex", "the prior's model(s), as its index in the model list.", Input.Validate.REQUIRED);
 
     public double calculateLogP() {
         this.logP = 0.0;
         boolean priorActive = false;
-        if (modelIndexInput.get().getDimension() == 1) {
-            priorActive = Objects.equals(modelIndexInput.get().getValue(), modelIndicatorInput.get().getValue());
+        if (modelIndexInput.get().size() == 1) {
+            priorActive = Objects.equals(modelIndexInput.get().get(), modelIndicatorInput.get().get());
         } else {
-            for (int i = 0; i < modelIndexInput.get().getDimension(); i++) {
-                if (modelIndicatorInput.get().getValue() == modelIndexInput.get().getValue(i)) {
+            for (int i = 0; i < modelIndexInput.get().size(); i++) {
+                if (modelIndicatorInput.get().get() == modelIndexInput.get().get(i)) {
                     priorActive = true;
                     break;
                 }
             }
         }
 
-        Prior prior;
+        TensorDistribution<?, ?> prior;
         if (priorActive) prior = priorInput.get();
         else prior = pseudoPriorInput.get();
 

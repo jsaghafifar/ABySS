@@ -1,13 +1,14 @@
 package abyss.distributions;
 
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.evolution.substitutionmodel.ColtEigenSystem;
 import beast.base.evolution.substitutionmodel.EigenSystem;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.inference.parameter.BoolVectorParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.RealVector;
 import jdk.jfr.Description;
 
 import java.util.ArrayList;
@@ -23,13 +24,13 @@ import static abyss.substitutionmodel.ABySSubstitutionModel.setupUnnormNonrevQ;
 @Description("Check can converge, reject proposed Q matrix otherwise")
 public class EigenFriendlyQPrior extends Distribution {
 
-    final public Input<Function> ratesInput = new Input<>("rates",
+    final public Input<RealVectorParam<NonNegativeReal>> ratesInput = new Input<>("rates", // nonnegative?
             "rates parameter", Input.Validate.REQUIRED);
-    final public Input<BooleanParameter> indicatorsInput = new Input<>("rateIndicator",
+    final public Input<BoolVectorParam> indicatorsInput = new Input<>("rateIndicator",
             "rates to indicate the presence or absence of transition matrix entries", Input.Validate.OPTIONAL);
     final public Input<Integer> nrOfStatesInput = new Input<>("nrOfStates",
             "number of states parameter", Input.Validate.REQUIRED);
-    protected Function rates;
+    protected RealVector<NonNegativeReal> rates;
     protected double[][] Qm;
     protected Integer nrOfStates;
     protected EigenSystem eigenSystem;
@@ -38,15 +39,15 @@ public class EigenFriendlyQPrior extends Distribution {
     @Override
     public double calculateLogP() {
         logP = 0.0;
-        Function rates = this.ratesInput.get();
+        RealVector<NonNegativeReal> rates = this.ratesInput.get();
         nrOfStates = this.nrOfStatesInput.get();
-        double[] relativeRates = new double[rates.getDimension()];
+        double[] relativeRates = new double[rates.size()];
         if (this.indicatorsInput.get() != null) {
             for (int i = 0; i < relativeRates.length; i++) {
-                relativeRates[i] = rates.getArrayValue(i) * (indicatorsInput.get().getValue(i)?1.:0.);
+                relativeRates[i] = rates.get(i) * (indicatorsInput.get().get(i)?1.:0.);
             }
         } else for (int i = 0; i < relativeRates.length; i++) {
-            relativeRates[i] = rates.getArrayValue(i);
+            relativeRates[i] = rates.get(i);
         }
 
         Qm = setupUnnormNonrevQ(relativeRates, nrOfStates);
@@ -60,7 +61,7 @@ public class EigenFriendlyQPrior extends Distribution {
     @Override
     public List<String> getArguments() {
         List<String> args = new ArrayList<>();
-        args.add(((RealParameter)ratesInput.get()).getID());
+        args.add((ratesInput.get()).getID());
         if (indicatorsInput.get() != null) {
             args.add((indicatorsInput.get().getID()));
         }
@@ -81,9 +82,9 @@ public class EigenFriendlyQPrior extends Distribution {
     @Override
     public void initAndValidate() {
         if (indicatorsInput.get() != null &&
-                indicatorsInput.get().getDimension() != ratesInput.get().getDimension()) {
+                indicatorsInput.get().size() != ratesInput.get().size()) {
             throw new RuntimeException("Indicators must be same size as rates parameter but it was dimension " +
-                    indicatorsInput.get().getDimension());
+                    indicatorsInput.get().size());
         }
     }
 }

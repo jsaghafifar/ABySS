@@ -1,7 +1,7 @@
 package abyss.inference;
 
 import beagle.Beagle;
-import beast.base.evolution.likelihood.BeagleTreeLikelihood;
+import beast.base.spec.evolution.likelihood.BeagleTreeLikelihood;
 
 /**
  * @author Remco Bouckaert

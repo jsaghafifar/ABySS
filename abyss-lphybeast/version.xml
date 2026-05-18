@@ -1,4 +1,6 @@
-<package name='abyss-lphybeast' version='0.0.1'>
+<package name='abyss-lphybeast' version='0.0.2'>
+    <depends on='abyss' atleast='0.0.2'/>
+    <depends on='lphybeast' atleast='1.3.0'/>
 
 
     <!-- add BEAST2 service below  -->

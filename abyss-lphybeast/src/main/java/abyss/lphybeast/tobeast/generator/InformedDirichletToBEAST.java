@@ -3,27 +3,28 @@ package abyss.lphybeast.tobeast.generator;
 import abyss.InformedDirichlet;
 import abyss.distributions.InformedDirichletPrior;
 import beast.base.core.BEASTInterface;
-import beast.base.inference.distribution.Prior;
-import beast.base.inference.parameter.RealParameter;
-import lphy.core.model.Value;
+import beast.base.inference.Distribution;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
 /**
  * @author Jasmine Saghafifar
  */
-public class InformedDirichletToBEAST implements GeneratorToBEAST<InformedDirichlet, Prior> {
+public class InformedDirichletToBEAST implements GeneratorToBEAST<InformedDirichlet, Distribution> {
     @Override
-    public Prior generatorToBEAST(InformedDirichlet generator, BEASTInterface value, BEASTContext context) {
+    public Distribution generatorToBEAST(InformedDirichlet generator, BEASTInterface value, BEASTContext context) {
         InformedDirichletPrior beastInformedDirichlet = new InformedDirichletPrior();
-        Value<Number[]> alpha = generator.getConc();
-        Value<Number> scale = generator.getScale();
+        RealVector<PositiveReal> alpha = (RealVector<PositiveReal>) context.getAsRealVector(generator.getConc());
+        RealScalar<PositiveReal> scale = (RealScalar<PositiveReal>) context.getAsRealVector(generator.getScale());
 
-        beastInformedDirichlet.setInputValue("alpha", context.getBEASTObject(alpha));
-        beastInformedDirichlet.setInputValue("scale", context.getBEASTObject(scale));
+        beastInformedDirichlet.setInputValue("alpha", alpha);
+        beastInformedDirichlet.setInputValue("scale", scale);
         beastInformedDirichlet.initAndValidate();
 
-        return BEASTContext.createPrior(beastInformedDirichlet, (RealParameter) value);
+        return beastInformedDirichlet;
     }
 
     @Override
@@ -32,7 +33,7 @@ public class InformedDirichletToBEAST implements GeneratorToBEAST<InformedDirich
     }
 
     @Override
-    public Class<Prior> getBEASTClass() {
-        return Prior.class;
+    public Class<Distribution> getBEASTClass() {
+        return Distribution.class;
     }
 }

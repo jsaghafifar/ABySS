@@ -1,13 +1,12 @@
 package abyss.lphybeast.spi;
 
-import abyss.*;
 import beast.base.evolution.datatype.DataType;
 import jebl.evolution.sequences.SequenceType;
 import lphy.core.model.Generator;
 import lphy.core.vectorization.operation.Slice;
 import lphybeast.GeneratorToBEAST;
 import lphybeast.ValueToBEAST;
-import lphybeast.spi.LPhyBEASTExt;
+import lphybeast.spi.LPhyBEASTMapping;
 import abyss.lphybeast.tobeast.generator.*;
 
 import java.util.Arrays;
@@ -22,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * to extend.
  * @author Walter Xie
  */
-public class ABySSLBExtImpl implements LPhyBEASTExt {
+public class ABySSLBExtImpl implements LPhyBEASTMapping {
     // the first matching converter is used.
     @Override
     public List<Class<? extends ValueToBEAST>> getValuesToBEASTs() {
@@ -33,8 +32,9 @@ public class ABySSLBExtImpl implements LPhyBEASTExt {
     @Override
     public List<Class<? extends GeneratorToBEAST>> getGeneratorToBEASTs() {
         return Arrays.asList( NonReversibleToBEAST.class, NQPFAMToBEAST.class,
+                ClassicNonReversibleToBEAST.class, ClassicNQPFAMToBEAST.class,
                 InformedDirichletToBEAST.class, ConnectedSVSToBEAST.class,
-                MixedAlignmentToBEAST.class, ComputeEquilibriumToBEAST.class);
+                MixedAlignmentToBEAST.class);//, ComputeEquilibriumToBEAST.class);
     }
 
     // LPhy SequenceType => BEAST DataType

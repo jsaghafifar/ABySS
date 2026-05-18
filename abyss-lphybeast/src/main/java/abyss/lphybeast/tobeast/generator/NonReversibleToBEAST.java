@@ -9,14 +9,15 @@ import abyss.logger.DetailedBalanceLogger;
 import abyss.logger.NetFluxLogger;
 import abyss.logger.RootMeanSquareLogger;
 import beast.base.core.BEASTInterface;
-import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
-import beast.base.inference.operator.BitFlipOperator;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.operator.BitFlipOperator;
 import beast.base.inference.operator.kernel.Transform;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.RealParameter;
 import abyss.substitutionmodel.ABySSubstitutionModel;
 import abyss.NonReversible;
+import beast.base.spec.inference.parameter.BoolVectorParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.SimplexParam;
 import jebl.evolution.sequences.SequenceType;
 import lphy.base.evolution.likelihood.PhyloCTMC;
 import lphy.core.model.Value;
@@ -37,7 +38,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         int numStates;
         Value<Boolean> symmetric = nq.getSymmetric();
         Value<Double[]> rates = nq.getRates();
-        RealParameter ratesParameter = (RealParameter)context.getBEASTObject(rates);
+        RealVectorParam<PositiveReal> ratesParameter = (RealVectorParam<PositiveReal>)context.getBEASTObject(rates);
 
         // get number of states for keys
         if (symmetric.value()) {
@@ -54,8 +55,11 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
 
         // init reversible Q freqs
         if (symmetric.value()) {
-            RealParameter freqParameter = (RealParameter)context.getBEASTObject(nq.getFreq());
-            beastNQ.setInputValue("frequencies", BEASTContext.createBEASTFrequencies(freqParameter, stateNames));
+            SimplexParam freqParameter = (SimplexParam) context.getBEASTObject(nq.getFreq());
+            freqParameter.setInputValue("keys", stateNames);
+            freqParameter.initAndValidate();
+            freqParameter.setID(nq.getFreq().getId());
+            beastNQ.setInputValue("frequencies", freqParameter);
         }
 
         ratesParameter.setInputValue("keys", keys);
@@ -67,11 +71,11 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
             Value<Boolean[]> indicators = nq.getIndicators();
 
             BEASTInterface bi = context.getBEASTObject(indicators);
-            BooleanParameter rateIndicatorParameter;
+            BoolVectorParam rateIndicatorParameter;
             if (bi instanceof SVSPrior prior) {
                 rateIndicatorParameter = prior.indicatorsInput.get();
-            } else if (bi instanceof BooleanParameter) {
-                rateIndicatorParameter = (BooleanParameter) bi;
+            } else if (bi instanceof BoolVectorParam) {
+                rateIndicatorParameter = (BoolVectorParam) bi;
             } else throw new UnsupportedOperationException();
 
             rateIndicatorParameter.setInputValue("keys", keys);
@@ -108,15 +112,15 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
     public static char[] getStates(BEASTContext context, int numStates) {
         char[] states = new char[numStates];
 
-        if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
+        if (((context.getAlignments().getFirst().getGenerator() instanceof PhyloCTMC phyloCTMC &&
                 phyloCTMC.getDataType() == SequenceType.NUCLEOTIDE) ||
-                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
+                context.getAlignments().getFirst().getGenerator() instanceof MixedAlignment mixedAlignment &&
                         mixedAlignment.getDataType() == SequenceType.NUCLEOTIDE)
                 && numStates == 4)
             states = new char[] {'A', 'C', 'G', 'T'};
-        else if (((context.getAlignments().get(0).getGenerator() instanceof PhyloCTMC phyloCTMC &&
+        else if (((context.getAlignments().getFirst().getGenerator() instanceof PhyloCTMC phyloCTMC &&
                 phyloCTMC.getDataType() == SequenceType.AMINO_ACID) ||
-                context.getAlignments().get(0).getGenerator() instanceof MixedAlignment mixedAlignment &&
+                context.getAlignments().getFirst().getGenerator() instanceof MixedAlignment mixedAlignment &&
                         mixedAlignment.getDataType() == SequenceType.AMINO_ACID)
                 && numStates == 20)
             states = new char[] {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
@@ -155,7 +159,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         return String.join(" ", keysArray);
     }
 
-    public static void addNonUniformBitFlipOperator(BEASTContext context, BooleanParameter parameter, double weight) {
+    public static void addNonUniformBitFlipOperator(BEASTContext context, BoolVectorParam parameter, double weight) {
         context.addSkipOperator(parameter);
         BitFlipOperator operator = new BitFlipOperator();
         operator.setID(parameter.getID() + ".bitFlip");
@@ -173,8 +177,8 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
         context.addExtraOperator(operator);
     }
 
-    private Transform addLogConstrainedSumTransform(RealParameter parameter) {
-        List<Function> logFunc = new ArrayList<>();
+    private Transform addLogConstrainedSumTransform(RealVectorParam<?> parameter) {
+        List<RealVectorParam<?>> logFunc = new ArrayList<>();
         logFunc.add(parameter);
         Transform.LogConstrainedSumTransform logConstrainedSumTransform = new Transform.LogConstrainedSumTransform();
         logConstrainedSumTransform.initByName("f", logFunc);
@@ -225,7 +229,7 @@ public class NonReversibleToBEAST implements GeneratorToBEAST<NonReversible, ABy
     }
 
     // private prior methods
-    private void createEigenFriendlyQPrior(BEASTContext context, Function rates, BooleanParameter indicators, Integer numStates, String id) {
+    private void createEigenFriendlyQPrior(BEASTContext context, RealVectorParam<?> rates, BoolVectorParam indicators, Integer numStates, String id) {
         // ensure that nonreversible Q matrix is eigen-friendly
         EigenFriendlyQPrior qPrior = new EigenFriendlyQPrior();
         qPrior.setInputValue("rates", rates);

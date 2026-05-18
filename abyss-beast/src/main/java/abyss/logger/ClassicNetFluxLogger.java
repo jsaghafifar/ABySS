@@ -1,12 +1,12 @@
 package abyss.logger;
 
-import abyss.substitutionmodel.ABySSubstitutionModel;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.inference.CalculationNode;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealVector;
+import beastclassic.evolution.substitutionmodel.SVSGeneralSubstitutionModel;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -19,13 +19,13 @@ import java.util.stream.DoubleStream;
  */
 
 @Description("Logger for net fluxes in nonreversible Q")
-public class NetFluxLogger extends CalculationNode implements Loggable, RealVector<Real> {
-    final public Input<ABySSubstitutionModel> modelInput;
+public class ClassicNetFluxLogger extends CalculationNode implements Loggable, RealVector<Real> {
+    final public Input<SVSGeneralSubstitutionModel> modelInput;
     final public Input<String> stateNamesInput;
-    protected ABySSubstitutionModel model;
+    protected SVSGeneralSubstitutionModel model;
     protected List<String> stateNames;
 
-    public NetFluxLogger() {
+    public ClassicNetFluxLogger() {
         this.modelInput = new Input<>("model", "ABYSS SVS general substitution model.",
                 Input.Validate.REQUIRED);
         this.stateNamesInput = new Input<>("states", "State names");
@@ -50,7 +50,7 @@ public class NetFluxLogger extends CalculationNode implements Loggable, RealVect
     public void init(PrintStream out) {
         // logger id + cycle name = param name
         String id = getID();
-        
+
         String[] states = this.stateNames != null ? stateNames.toArray(new String[0]) : new String[]{"1","2","3","4"};
         int[][] cycles = getCycles();
 
@@ -100,7 +100,7 @@ public class NetFluxLogger extends CalculationNode implements Loggable, RealVect
         return DoubleStream.of(f).boxed().toList();
     }
 
-    private int[][] getCycles() { // TODO make generalisable for different nrOfStates (low priority)
+    private int[][] getCycles() {
         return new int[][]{ {0,1,2},  {0,1,3},  {0,2,3},  {1,2,3},
                                       {0,1,2,3},{0,1,3,2},{0,2,1,3}        };
     }

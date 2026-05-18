@@ -1,12 +1,12 @@
 package abyss.logger;
 
-import abyss.substitutionmodel.ABySSubstitutionModel;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.inference.CalculationNode;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealVector;
+import beastclassic.evolution.substitutionmodel.SVSGeneralSubstitutionModel;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -19,14 +19,14 @@ import java.util.stream.DoubleStream;
  */
 
 @Description("Logger for deviations from detailed balance in nonreversible Q")
-public class DetailedBalanceLogger extends CalculationNode implements Loggable, RealVector<Real>{
-    final public Input<ABySSubstitutionModel> modelInput;
+public class ClassicDetailedBalanceLogger extends CalculationNode implements Loggable, RealVector<Real> {
+    final public Input<SVSGeneralSubstitutionModel> modelInput;
     final public Input<String> keysInput;
-    protected ABySSubstitutionModel model;
+    protected SVSGeneralSubstitutionModel model;
     protected List<String> keys;
     protected double[] equilibriumFreqs;
 
-    public DetailedBalanceLogger() {
+    public ClassicDetailedBalanceLogger() {
         this.modelInput = new Input<>("model", "ABYSS SVS general substitution model.",
                 Input.Validate.REQUIRED);
         this.keysInput = new Input<>("keys", "Rate names");

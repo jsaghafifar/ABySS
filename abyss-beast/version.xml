@@ -1,5 +1,6 @@
-<package name='ABySS' version='0.0.1'>
-    <depends on='BEAST.base' atleast='2.7.8'/>
+<package name='ABySS' version='0.0.2'>
+    <depends on='BEAST.base' atleast='2.8.0'/>
+<!--    <depends on='BEAST_CLASSIC' atleast='1.6.4'/>-->
 
     <!-- add BEAST2 service below  -->
 
@@ -15,9 +16,12 @@
         <provider classname="abyss.substitutionmodel.ABySSubstitutionModel"/>
         <provider classname="abyss.substitutionmodel.ABySSModelAveraging"/>
         <provider classname="abyss.logger.ABySSFrequencyLogger"/>
+<!--        <provider classname="abyss.logger.ClassicFrequencyLogger"/>-->
         <provider classname="abyss.logger.AlignmentModelLogger"/>
         <provider classname="abyss.logger.DetailedBalanceLogger"/>
         <provider classname="abyss.logger.NetFluxLogger"/>
+<!--        <provider classname="abyss.logger.ClassicDetailedBalanceLogger"/>-->
+<!--        <provider classname="abyss.logger.ClassicNetFluxLogger"/>-->
         <provider classname="abyss.logger.RootMeanSquareLogger"/>
         <provider classname="abyss.logger.SiteMixtureLikelihoodLogger"/>
         <provider classname="abyss.logger.SiteModelLogger"/>

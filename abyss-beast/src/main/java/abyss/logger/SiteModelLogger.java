@@ -6,12 +6,13 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.util.FastMath;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Jasmine Saghafifar
@@ -29,7 +30,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
     @Override
     public void initAndValidate() {
         this.modelCount = mixedLikelihoodsInput.get().pLikelihoods.get().size();
-        Alignment data = (Alignment) mixedLikelihoodsInput.get().pLikelihoods.get().get(0).getInput("data").get();
+        Alignment data = (Alignment) mixedLikelihoodsInput.get().pLikelihoods.get().getFirst().getInput("data").get();
         this.siteCount = data.getSiteCount();
         this.nrOfPatterns = data.getPatternCount();
     }
@@ -65,7 +66,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
             }
         } else {
             // for site mixture, calculate likelihood for every site, sampling model index from each
-            double[] siteModelWeights = mixedLikelihoodsInput.get().siteModelWeightsInput.get().getDoubleValues();
+            List<Double> siteModelWeights = mixedLikelihoodsInput.get().siteModelWeightsInput.get().getElements();
             double[][] patternLogLikelihoods = new double[this.modelCount][this.nrOfPatterns];
 
             // get pattern log likelihoods
@@ -87,7 +88,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
                 // calc pattern probabilities, taking site model weights in account
                 pSum = 0;
                 for (int i = 0; i < this.modelCount; i++) {
-                    probsPattern[i] = Math.exp(patternLogLikelihoods[i][j] - maxLogP) * siteModelWeights[i];
+                    probsPattern[i] = Math.exp(patternLogLikelihoods[i][j] - maxLogP) * siteModelWeights.get(i);
                     pSum += probsPattern[i];
                 }
 
@@ -97,14 +98,14 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
                 }
             }
 
-            Alignment data = ((TreeLikelihood) mixedLikelihoodsInput.get().pLikelihoods.get().get(0)).dataInput.get();
+            Alignment data = ((TreeLikelihood) mixedLikelihoodsInput.get().pLikelihoods.get().getFirst()).dataInput.get();
 
             for (int i = 0; i < siteCount; i++) {
                 int patternNum = data.getPatternIndex(i);
                 double[] p = posteriorOfEachModelPerPattern[patternNum];
                 double sum = 0;
-                for (int j = 0; j < p.length; j++) {
-                    sum += p[j];
+                for (double v : p) {
+                    sum += v;
                 }
                 if (Math.abs(sum-1) > 1e-6) out.print(-1 + "\t");
                 else out.print(Randomizer.randomChoicePDF(p) + "\t");

@@ -2,8 +2,7 @@ package abyss.inference;
 
 import beast.base.core.Description;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
-import beast.base.inference.parameter.Parameter;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.util.Randomizer;
 import cern.colt.bitvector.BitVector;
 
@@ -16,7 +15,7 @@ import cern.colt.bitvector.BitVector;
 @Description("ABySS ver BayesianStochasticSearchVariableSelection ported from BEAST1")
 public interface AbyssSVS {
 
-    public Parameter getIndicators();
+    public BoolVectorParam getIndicators();
 
     public boolean validState();
 
@@ -47,12 +46,16 @@ public interface AbyssSVS {
         }
 
         // unused methods - maybe implement as stateInitializer to make sure initial state is well connected
-        public static void randomize(RealParameter indicators,int dim, boolean reversible) {
+        public static void randomize(BoolVectorParam indicators,int dim, boolean reversible) {
+            Double[] indicatorValues = new Double[indicators.size()];
+            for (int i = 0; i < indicators.size(); i++) {
+                indicatorValues[i] = indicators.get(i) ? 1.0 : 0.0;
+            }
             do {
-                for (int i = 0; i < indicators.getDimension(); i++)
-                    indicators.setValue(i,
-                            (Randomizer.nextDouble() < 0.5) ? 0.0 : 1.0);
-            } while (!(isStronglyConnected(indicators.getValues(),
+                for (int i = 0; i < indicators.size(); i++)
+                    indicators.set(i,
+                            !(Randomizer.nextDouble() < 0.5));
+            } while (!(isStronglyConnected(indicatorValues,
                     dim, reversible)));
         }
 
@@ -96,8 +99,7 @@ public interface AbyssSVS {
                 if (j < i) {
                     return getEntry(j,i,dim,reversible);
                 }
-                int entry = i * dim - i * (i + 1) / 2 + j - 1 -i;
-                return entry;
+                return i * dim - i * (i + 1) / 2 + j - 1 -i;
             }
 
             int entry = i * (dim - 1) + j;

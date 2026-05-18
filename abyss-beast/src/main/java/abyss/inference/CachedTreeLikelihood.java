@@ -1,6 +1,6 @@
 package abyss.inference;
 
-import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.spec.evolution.likelihood.TreeLikelihood;
 
 /**
  * @author Jasmine Saghafifar
@@ -20,7 +20,7 @@ public class CachedTreeLikelihood extends TreeLikelihood {
     
     @Override
     public double[] getPatternLogLikelihoods() {
-        if (beagle != null && isDirtyCalculation()) {
+        if (beagle != null && somethingIsDirty()) {
             System.arraycopy(beagle.getPatternLogLikelihoods(), 0, patternLogLikelihoods, 0, patternLogLikelihoods.length);
         }
 		return patternLogLikelihoods.clone();

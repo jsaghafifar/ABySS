@@ -8,8 +8,6 @@ import lphy.core.model.annotation.GeneratorInfo;
 import lphy.core.model.annotation.ParameterInfo;
 import lphy.core.model.datatype.DoubleArray2DValue;
 
-import static abyss.ComputeEquilibrium.computeEquilibrium;
-
 /**
  * Non-reversible empirical amino acid Q matrix based on PFAM data
  * @author Jasmine Saghafifar
@@ -21,13 +19,13 @@ import static abyss.ComputeEquilibrium.computeEquilibrium;
         year = 2022,
         authors = {"Dang", "Minh", "McShea", "Masel", "James", "Vinh", "Lanfear"},
         DOI = "https://doi.org/10.1093/sysbio/syac007")
-public class NQPFAM extends RateMatrix {
+public class ClassicNQPFAM extends RateMatrix {
 
-    public NQPFAM(@ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate) {
+    public ClassicNQPFAM(@ParameterInfo(name = RateMatrix.meanRateParamName, description = "the mean rate of the process. default 1.0", optional=true) Value<Number> meanRate) {
         super(meanRate);
     }
 
-    @GeneratorInfo(name = "nqpfam", verbClause = "is", narrativeName = "Fixed nonreversible substitution model",
+    @GeneratorInfo(name = "classicnqpfam", verbClause = "is", narrativeName = "Fixed nonreversible substitution model",
             category = GeneratorCategory.RATE_MATRIX,
             description = "An asymmetric instantaneous rate matrix for nonreversible amino acid substitution.")
     public Value<Double[][]> apply() {
@@ -40,24 +38,26 @@ public class NQPFAM extends RateMatrix {
 
     protected Double[][] getQ() {
         double[] r = getRates();
-        int numStates = getNumStates();
+        double[] f = getFreq();
+        int numStates = f.length;
+        Double[] freq = new Double[numStates];
         Double[][] Q = new Double[numStates][numStates];
         int x = 0;
         for (int i = 0; i < numStates; i++) {
             Q[i][i] = 0.0;
+            freq[i] = f[i];
             for (int j = 0; j < i; j++) {
-                Q[i][j] = r[x];
+                Q[i][j] = r[x] * f[j];
                 Q[i][i] -= Q[i][j];
                 x++;
             }
             for (int j = i + 1; j < numStates; j++) {
-                Q[i][j] = r[x];
+                Q[i][j] = r[x] * f[j];
                 Q[i][i] -= Q[i][j];
                 x++;
             }
         }
-        Double[] f = computeEquilibrium(Q);
-        normalize(f, Q, totalRateDefault1());
+        normalize(freq, Q, totalRateDefault1());
         return Q;
     }
 
@@ -93,8 +93,36 @@ public class NQPFAM extends RateMatrix {
         return rates;
     }
 
-    public Double[] getFreq() {
-        return computeEquilibrium(getQ());
+    public double[] getFreq() {
+        double[] freq = new double[20]; // ORDER: ACDEFGHIKLMNPQRSTVWY
+        freq[0] = 0.085828;
+        freq[1] = 0.010431;
+        freq[2] = 0.056571;
+        freq[3] = 0.067733;
+        freq[4] = 0.042634;
+        freq[5] = 0.065784;
+        freq[6] = 0.021005;
+        freq[7] = 0.054760;
+        freq[8] = 0.059301;
+        freq[9] = 0.099342;
+        freq[10] = 0.019806;
+        freq[11] = 0.042208;
+        freq[12] = 0.039871;
+        freq[13] = 0.039497;
+        freq[14] = 0.057765;
+        freq[15] = 0.069819;
+        freq[16] = 0.055733;
+        freq[17] = 0.064280;
+        freq[18] = 0.014445;
+        freq[19] = 0.033186;
+        double sum = 0;
+        for (int i = 0; i < freq.length; i++) {
+            sum += freq[i];
+        }
+        for (int i = 0; i < freq.length; i++) {
+            freq[i] /= sum;
+        }
+        return freq;
     }
 
     public int getNumStates() { return 20; }

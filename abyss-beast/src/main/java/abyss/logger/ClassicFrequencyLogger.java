@@ -1,12 +1,16 @@
 package abyss.logger;
 
-import abyss.substitutionmodel.ABySSubstitutionModel;
-import beast.base.core.*;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
 import beast.base.inference.CalculationNode;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.Simplex;
+import beastclassic.evolution.substitutionmodel.SVSGeneralSubstitutionModel;
 
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.DoubleStream;
 
@@ -15,14 +19,14 @@ import java.util.stream.DoubleStream;
  */
 
 @Description("Equilibrium frequency logger")
-public class ABySSFrequencyLogger extends CalculationNode implements Loggable, Simplex {
-    final public Input<ABySSubstitutionModel> modelInput;
+public class ClassicFrequencyLogger extends CalculationNode implements Loggable, Simplex {
+    final public Input<SVSGeneralSubstitutionModel> modelInput;
     final public Input<String> keysInput;
-    protected ABySSubstitutionModel model;
+    protected SVSGeneralSubstitutionModel model;
     protected List<String> keys;
     private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
-    public ABySSFrequencyLogger() {
+    public ClassicFrequencyLogger() {
         this.modelInput = new Input<>("model", "ABYSS SVS general substitution model.", Input.Validate.REQUIRED);
         this.keysInput = new Input<>("keys", "freq state names");
     }
@@ -32,8 +36,8 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, S
 
         if (this.keysInput.get() != null) {
             String[] keysArr = keysInput.get().split(" ");
-            List<String> keys = List.of(keysArr);
-            if (keys.size() != this.model.getStateCount())
+            List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
+            if (keys.size() != size())
                 throw new IllegalArgumentException("For 1D array, keys must have the same length as dimension ! " +
                         "Dimension = " + size() + ", but keys.size() = " + keys.size());
             this.keys = keys;
@@ -44,7 +48,7 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, S
         // substModel + freq + state name of j = param name
         String id = getID();
         String stateName;
-        for (int i = 0; i < size(); i++) {
+        for (int i = 0; i < this.model.getStateCount(); i++) {
             stateName = this.keys != null ? keys.get(i) : String.valueOf(i);
             out.print(id + '.' + stateName + "\t");
         }
@@ -58,8 +62,8 @@ public class ABySSFrequencyLogger extends CalculationNode implements Loggable, S
 
     }
 
-    private List<Double> getFrequencies(ABySSubstitutionModel model) {
-        int nrOfStates = this.model.getStateCount();
+    private List<Double> getFrequencies(SVSGeneralSubstitutionModel model) {
+        int nrOfStates = model.getStateCount();
         double t = DEFAULT_BRANCH_LENGTH;
         boolean equilibrium = false;
         double[] p;

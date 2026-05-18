@@ -2,8 +2,9 @@ package abyss.lphybeast.tobeast.generator;
 
 import abyss.substitutionmodel.ABySSubstitutionModel;
 import beast.base.core.BEASTInterface;
-import beast.base.inference.parameter.RealParameter;
 import abyss.NQPFAM;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
@@ -19,7 +20,7 @@ public class NQPFAMToBEAST implements GeneratorToBEAST<NQPFAM, ABySSubstitutionM
 
         ABySSubstitutionModel beastNQPFAM = new ABySSubstitutionModel();
 
-        RealParameter ratesParameter = new RealParameter(nqpfam.getRates());
+        RealVectorParam<PositiveReal> ratesParameter = new RealVectorParam<>(nqpfam.getRates(), PositiveReal.INSTANCE);
         int numStates = nqpfam.getNumStates();
 
         char[] states = getStates(context, numStates);

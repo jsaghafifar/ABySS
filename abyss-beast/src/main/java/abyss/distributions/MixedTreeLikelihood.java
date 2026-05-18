@@ -3,10 +3,11 @@ package abyss.distributions;
 
 import beast.base.core.*;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import org.apache.commons.math3.util.FastMath;
 
 import java.util.ArrayList;
@@ -25,16 +26,16 @@ public class MixedTreeLikelihood extends Distribution {
     final public Input<String> modeInput = new Input<>("mode",
             "how likelihoods should be handled. " +
                     "Site mixture (mix), model averaging (avg), or (both).", Input.Validate.REQUIRED);
-    final public Input<RealParameter> metaWeightsInput =
+    final public Input<RealVectorParam<NonNegativeReal>> metaWeightsInput =
             new Input<>("metaWeights",
                     "tree likelihood weights. Should be an indicator " +
                             "if averaging, or uniform if mixing. Default uniform.", Input.Validate.OPTIONAL);
-    final public Input<RealParameter> siteModelWeightsInput = new Input<>("siteModelWeights",
+    final public Input<RealVectorParam<NonNegativeReal>> siteModelWeightsInput = new Input<>("siteModelWeights",
             "estimated site likelihood weights. Required for site mixture (one for each model)", Input.Validate.OPTIONAL);
 
     protected String mode;
-    protected RealParameter metaWeights;
-    protected RealParameter siteModelWeights;
+    protected RealVectorParam<NonNegativeReal> metaWeights;
+    protected RealVectorParam<NonNegativeReal> siteModelWeights;
 
     @Override
     public void initAndValidate() {
@@ -42,8 +43,7 @@ public class MixedTreeLikelihood extends Distribution {
 
         if (pLikelihoods.get().isEmpty()) logP = 0;
         if (pLikelihoods.get().size() > 1 &&
-                pLikelihoods.get().get(0).getInput("data").get() instanceof Alignment) {
-            Alignment alignment = (Alignment) pLikelihoods.get().get(0).getInput("data").get();
+                pLikelihoods.get().getFirst().getInput("data").get() instanceof Alignment alignment) {
             for (int i = 1; i < pLikelihoods.get().size(); i++) {
                 if (alignment != pLikelihoods.get().get(i).getInput("data").get())
                     throw new IllegalArgumentException("Data should be same between likelihoods for MixedTreeLikelihood");
@@ -56,31 +56,31 @@ public class MixedTreeLikelihood extends Distribution {
             if (mode.equalsIgnoreCase("avg"))
                 throw new IllegalArgumentException("Model averaging does not support custom meta weights");
             metaWeights = metaWeightsInput.get();
-            if (mode.equalsIgnoreCase("mix") && metaWeights.getDimension() != pLikelihoods.get().size())
+            if (mode.equalsIgnoreCase("mix") && metaWeights.size() != pLikelihoods.get().size())
                 throw new IllegalArgumentException(
                         "Site mixture model must have same number of meta weights as given tree likelihoods.");
-            if (mode.equalsIgnoreCase("both") && metaWeights.getDimension() != (pLikelihoods.get().size() + 1))
+            if (mode.equalsIgnoreCase("both") && metaWeights.size() != (pLikelihoods.get().size() + 1))
                 throw new IllegalArgumentException("Site mixture with model averaging must have "+
                         (pLikelihoods.get().size() + 1)+" dimensions (site mixture model weight last).");
             double sum = 0;
-            for (int i = 0; i < metaWeights.getDimension(); i++) {
-                sum += metaWeights.getArrayValue(i);
+            for (int i = 0; i < metaWeights.size(); i++) {
+                sum += metaWeights.get(i);
             }
             if (Math.abs(sum - 1) > 1e-6) throw new IllegalArgumentException("Meta weights must sum to 1.");
         } else {
-            Double[] weights = mode.equalsIgnoreCase("both") ?
-                    new Double[pLikelihoods.get().size() + 1] : new Double[pLikelihoods.get().size()];
+            double[] weights = mode.equalsIgnoreCase("both") ?
+                    new double[pLikelihoods.get().size() + 1] : new double[pLikelihoods.get().size()];
             Arrays.fill(weights, 1.0 / weights.length);
-            metaWeights = new RealParameter(weights);
+            metaWeights = new RealVectorParam<>(weights, NonNegativeReal.INSTANCE);
         }
 
         if (siteModelWeightsInput.get() != null) {
             siteModelWeights = siteModelWeightsInput.get();
-            if (siteModelWeights.getDimension() != pLikelihoods.get().size())
+            if (siteModelWeights.size() != pLikelihoods.get().size())
                 throw new IllegalArgumentException("Site weights must have same dimensions as given tree likelihoods.");
             double sum = 0;
-            for (int i = 0; i < siteModelWeights.getDimension(); i++) {
-                sum += siteModelWeights.getArrayValue(i);
+            for (int i = 0; i < siteModelWeights.size(); i++) {
+                sum += siteModelWeights.get(i);
             }
             if (Math.abs(sum - 1) > 1e-6) throw new IllegalArgumentException("Site weights must sum to 1.");
         } else if (!mode.equalsIgnoreCase("avg")) {
@@ -94,9 +94,9 @@ public class MixedTreeLikelihood extends Distribution {
         logP = 0;
         double[] p = getPartialLogLikelihoods();
 
-        for (int i = 0; i < p.length; i++) {
-            if (Double.isInfinite(p[i]) || Double.isNaN(p[i])) {
-                logP += p[i];
+        for (double v : p) {
+            if (Double.isInfinite(v) || Double.isNaN(v)) {
+                logP += v;
                 return logP;
             }
         }
@@ -150,7 +150,7 @@ public class MixedTreeLikelihood extends Distribution {
             p = new double[1];
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
-                if (likelihood.isDirtyCalculation()) likelihood.calculateLogP();
+                if (likelihood.somethingIsDirty()) likelihood.calculateLogP();
             }
             p[0] = calculateSiteMixtureLogP();
 
@@ -158,19 +158,19 @@ public class MixedTreeLikelihood extends Distribution {
             p = new double[nrOfLikelihoods + 1];
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
-                p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
-                p[i] += Math.log(metaWeights.getArrayValue(i));
+                p[i] = likelihood.somethingIsDirty() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
+                p[i] += Math.log(metaWeights.get(i));
             }
 
             p[nrOfLikelihoods] = calculateSiteMixtureLogP();
-            p[nrOfLikelihoods] += Math.log(metaWeights.getArrayValue(nrOfLikelihoods));
+            p[nrOfLikelihoods] += Math.log(metaWeights.get(nrOfLikelihoods));
 
         } else if (mode.equalsIgnoreCase("avg")) {
             p = new double[nrOfLikelihoods];
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
-                p[i] = likelihood.isDirtyCalculation() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
-                p[i] += Math.log(metaWeights.getArrayValue(i));
+                p[i] = likelihood.somethingIsDirty() ? likelihood.calculateLogP() : likelihood.getCurrentLogP();
+                p[i] += Math.log(metaWeights.get(i));
             }
 
         } else throw new UnsupportedOperationException();
@@ -179,22 +179,22 @@ public class MixedTreeLikelihood extends Distribution {
     }
 
     public double[] getMetaWeights() {
-        return metaWeights.getDoubleValues();
+        return metaWeights.getValues();
     }
 
     private double calculateSiteMixtureLogP() {
         int nrOfLikelihoods = pLikelihoods.get().size();
-        int nrOfPatterns = ((TreeLikelihood) pLikelihoods.get().get(0)).getPatternLogLikelihoods().length;
+        int nrOfPatterns = ((TreeLikelihood) pLikelihoods.get().getFirst()).getPatternLogLikelihoods().length;
         double[] pSite = new double[nrOfLikelihoods];
         double logPMixture = 0;
-        Alignment data = ((TreeLikelihood) pLikelihoods.get().get(0)).dataInput.get();
+        Alignment data = ((TreeLikelihood) pLikelihoods.get().getFirst()).dataInput.get();
 
         for (int j = 0; j < nrOfPatterns; j++) {
             for (int i = 0; i < nrOfLikelihoods; i++) {
                 Distribution likelihood = pLikelihoods.get().get(i);
                 double[] patternLogLikelihoods = ((TreeLikelihood) likelihood).getPatternLogLikelihoods();
                 pSite[i] = patternLogLikelihoods[j];
-                pSite[i] += Math.log(siteModelWeights.getArrayValue(i));
+                pSite[i] += Math.log(siteModelWeights.get(i));
             }
             logPMixture += logSumExp(pSite) * data.getPatternWeight(j);
         }
@@ -205,8 +205,8 @@ public class MixedTreeLikelihood extends Distribution {
     private double logSumExp(double[] p) {
         double logP = 0;
         double max = Arrays.stream(p).max().getAsDouble();
-        for (int i = 0; i < p.length; i++) {
-            logP += FastMath.exp(p[i] - max);
+        for (double v : p) {
+            logP += FastMath.exp(v - max);
         }
         logP = max + Math.log(logP);
 

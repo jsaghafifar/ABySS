@@ -7,9 +7,8 @@ import abyss.logger.AlignmentModelLogger;
 import abyss.logger.SiteMixtureLikelihoodLogger;
 import abyss.logger.SiteModelLogger;
 import beast.base.core.BEASTInterface;
-import beast.base.evolution.sitemodel.SiteModel;
-import beast.base.inference.distribution.Dirichlet;
-import beast.base.inference.distribution.Prior;
+import beast.base.spec.evolution.sitemodel.SiteModel;
+import beast.base.spec.inference.distribution.Dirichlet;
 import lphy.base.evolution.alignment.Alignment;
 import lphy.base.evolution.likelihood.PhyloCTMC;
 import lphy.core.model.Value;
@@ -19,7 +18,6 @@ import lphybeast.GeneratorToBEAST;
 import java.util.ArrayList;
 import java.util.List;
 
-import static lphybeast.BEASTContext.createPrior;
 import static lphybeast.tobeast.generators.PhyloCTMCToBEAST.constructSiteModel;
 import static lphybeast.tobeast.generators.PhyloCTMCToBEAST.constructTreeAndBranchRate;
 
@@ -95,17 +93,17 @@ public class MixedAlignmentToBEAST implements GeneratorToBEAST<MixedAlignment, M
             weights = alignment.getSiteMixtureWeights();
         else throw new IllegalArgumentException("Site mixture weights must be specified for lphybeast.");
 
-        if (weights.getGenerator() instanceof lphy.base.distribution.Dirichlet) {
-            beast.base.inference.distribution.Dirichlet dirichlet = new Dirichlet();
+        if (weights.getGenerator() instanceof lphy.base.distribution.Dirichlet) { // TODO ???? prior class removed
+            beast.base.spec.inference.distribution.Dirichlet dirichlet = new Dirichlet();
             Value<Number[]> alpha = ((lphy.base.distribution.Dirichlet) weights.getGenerator()).getConcentration();
-            dirichlet.setInputValue("alpha", context.getAsRealParameter(alpha));
+            dirichlet.setInputValue("alpha", context.getAsRealVector(alpha));
             dirichlet.initAndValidate();
 
-            Prior prior = createPrior(dirichlet, context.getAsRealParameter(weights));
-            context.addBEASTObject(prior, weights);
-            treeLikelihood.setInputValue("siteModelWeights", context.getAsRealParameter(weights));
+//            Prior prior = createPrior(dirichlet, context.getAsRealVector(weights));
+//            context.addBEASTObject(prior, weights);
+            treeLikelihood.setInputValue("siteModelWeights", context.getAsRealVector(weights));
             context.removeBEASTObject(context.getBEASTObject(alignment.getSiteMixtureWeights().getGenerator()));
-        } else treeLikelihood.setInputValue("siteModelWeights", context.getAsRealParameter(weights));
+        } else treeLikelihood.setInputValue("siteModelWeights", context.getAsRealVector(weights));
 
     }
 

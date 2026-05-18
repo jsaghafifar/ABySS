@@ -2,15 +2,12 @@ package abyss.substitutionmodel;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.evolution.datatype.DataType;
-import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.substitutionmodel.ComplexColtEigenSystem;
-import beast.base.evolution.substitutionmodel.GeneralSubstitutionModel;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.evolution.substitutionmodel.GeneralSubstitutionModel;
 import beast.base.evolution.tree.Node;
-import beast.base.inference.parameter.IntegerParameter;
+import beast.base.spec.inference.parameter.IntScalarParam;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,12 +20,12 @@ import java.util.List;
 public class ABySSModelAveraging extends GeneralSubstitutionModel {
     final public Input<List<GeneralSubstitutionModel>> substModelInput =
             new Input<>("model", "substitution model", new ArrayList<>(), Input.Validate.REQUIRED);
-    final public Input<IntegerParameter> modelIndicatorInput =
+    final public Input<IntScalarParam<NonNegativeInt>> modelIndicatorInput =
             new Input<>("modelIndicator", "index of the model in list of models that is used for its rates and frequencies", Input.Validate.REQUIRED);
     final public Input<Integer> nrOfStatesInput =
             new Input<>("nrOfStates", "number of states parameter", Input.Validate.REQUIRED);
 
-    IntegerParameter modelIndicator;
+    IntScalarParam<NonNegativeInt> modelIndicator;
     List<GeneralSubstitutionModel> models;
 
     public ABySSModelAveraging() {
@@ -46,14 +43,6 @@ public class ABySSModelAveraging extends GeneralSubstitutionModel {
 
         models = substModelInput.get();
         modelIndicator = modelIndicatorInput.get();
-        if (modelIndicator.getUpper() > models.size() - 1) {
-            Log.warning("Setting upper limit of " + modelIndicator.getID() + " to " + (models.size()-1) +".");
-            modelIndicator.setUpper(models.size() - 1);
-        }
-        if (modelIndicator.getLower() < 0) {
-            Log.warning("Setting lower limit of " + modelIndicator.getID() + " to 0.");
-            modelIndicator.setLower(0);
-        }
 
         updateMatrix = true;
         eigenSystem = new ComplexColtEigenSystem(nrOfStates);
@@ -65,53 +54,48 @@ public class ABySSModelAveraging extends GeneralSubstitutionModel {
 
     @Override
     public void setupRelativeRates() {
-        GeneralSubstitutionModel model = models.get(modelIndicator.getValue());
+        GeneralSubstitutionModel model = models.get(modelIndicator.get());
         model.setupRelativeRates();
-        double[] rates = model.getRelativeRates();
-        relativeRates = rates;
+        relativeRates = model.getRelativeRates();
     }
 
     @Override
     public void setupRateMatrix() {
-        GeneralSubstitutionModel model = models.get(modelIndicator.getValue());
+        GeneralSubstitutionModel model = models.get(modelIndicator.get());
         model.setupRateMatrix();
-        double[][] matrix = model.getRateMatrix();
-        rateMatrix = matrix;
+        rateMatrix = model.getRateMatrix();
     }
 
     @Override
     public double[] getFrequencies() {
-        GeneralSubstitutionModel model = models.get(modelIndicator.getValue());
-        double[] f = model.getFrequencies();
-        return f;
+        GeneralSubstitutionModel model = models.get(modelIndicator.get());
+        return model.getFrequencies();
     }
 
     @Override
     public double[][] getRateMatrix() {
-        GeneralSubstitutionModel model = models.get(modelIndicator.getValue());
+        GeneralSubstitutionModel model = models.get(modelIndicator.get());
         model.setupRateMatrix();
-        double[][] matrix = model.getRateMatrix();
-        rateMatrix = matrix;
+        rateMatrix = model.getRateMatrix();
         return rateMatrix;
     }
 
     @Override
     public double[] getRateMatrix(Node node) {
-        GeneralSubstitutionModel model = models.get(modelIndicator.getValue());
+        GeneralSubstitutionModel model = models.get(modelIndicator.get());
         model.setupRateMatrix();
         double[][] matrix = model.getRateMatrix();
         double[] rates = new double[nrOfStates*nrOfStates];
         for (int i = 0; i < nrOfStates; i++) {
-            for (int j = 0; j < nrOfStates; j++) {
-                rates[i*nrOfStates + j] = matrix[i][j];
-            }
+            // TODO check array copy done right. was i*nrOfStates + j = i,j
+            System.arraycopy(matrix[i], 0, rates, i * nrOfStates, nrOfStates);
         }
         return rates;
     }
 
     @Override
     protected boolean requiresRecalculation() {
-        if (modelIndicator.isDirtyCalculation()) {
+        if (modelIndicator.somethingIsDirty()) {
             updateMatrix = true;
             return true;
         }

@@ -2,15 +2,15 @@ package abyss.substitutionmodel;
 
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.substitutionmodel.ComplexSubstitutionModel;
 import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.Parameter;
 import abyss.inference.AbyssSVS;
+import beast.base.spec.inference.parameter.BoolVectorParam;
+import beast.base.spec.type.RealVector;
 
 import java.util.Arrays;
 
@@ -22,10 +22,10 @@ import java.util.Arrays;
 @Description("ABySS ver SVS General Substitution Model")
 public class ABySSubstitutionModel extends ComplexSubstitutionModel implements AbyssSVS {
 
-    public Input<BooleanParameter> indicatorsInput = new Input<BooleanParameter>("rateIndicator",
+    public Input<BoolVectorParam> indicatorsInput = new Input<>("rateIndicator",
             "rates to indicate the presence or absence of transition matrix entries", Validate.OPTIONAL);
 
-    public Input<Boolean> isSymmetricInput = new Input<Boolean>("symmetric",
+    public Input<Boolean> isSymmetricInput = new Input<>("symmetric",
     		"Indicates the rate matrix is symmetric. " +
             "If true (default) n(n-1)/2 rates and indicators need to be specified. " +
             "If false, n(n-1) rates and indicators need to be specified.", Boolean.FALSE);
@@ -34,7 +34,7 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
         frequenciesInput.setRule(Validate.OPTIONAL);
     }
 
-    private BooleanParameter rateIndicator;
+    private BoolVectorParam rateIndicator;
     private boolean isSymmetric = false;
     private static final double DEFAULT_BRANCH_LENGTH = 100000;
 
@@ -43,7 +43,7 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
         if (indicatorsInput.get() != null) {
             rateIndicator = indicatorsInput.get();
 
-            if (indicatorsInput.get().getDimension() != ratesInput.get().getDimension())
+            if (indicatorsInput.get().size() != ratesInput.get().size())
                 throw new IllegalArgumentException("Dimension of inputs 'rates' and 'rateIndicator' must match.");
         }
 
@@ -52,15 +52,15 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
             frequencies = frequenciesInput.get();
             nrOfStates = frequencies.getFreqs().length;
 
-            if (ratesInput.get().getDimension() != nrOfStates * (nrOfStates-1)/2) {
-                throw new IllegalArgumentException("Dimension of input 'rates' is " + ratesInput.get().getDimension() + " but a " +
+            if (ratesInput.get().size() != nrOfStates * (nrOfStates-1)/2) {
+                throw new IllegalArgumentException("Dimension of input 'rates' is " + ratesInput.get().size() + " but a " +
                         "rate matrix of dimension " + nrOfStates + "x" + (nrOfStates -1) + "/2" + "=" + nrOfStates * (nrOfStates -1) / 2 + " was " +
                         "expected");
             }
         } else {
             if (frequenciesInput.get() != null)
                 throw new IllegalArgumentException("Frequencies cannot be specified for nonreversible substitution");
-            double root = (-1 - Math.sqrt(1+4* ratesInput.get().getDimension()))/2;
+            double root = (-1 - Math.sqrt(1+4* ratesInput.get().size()))/2;
             if (root - (int) root < 1e-6) nrOfStates = (int) Math.abs(root);
             else throw new IllegalArgumentException("Rates must have dimension nrOfStates*(nrOfStates-1) when nonreversible");
 
@@ -69,13 +69,13 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
         updateMatrix = true;
         eigenSystem = createEigenSystem(); // ComplexColtEigenSystem
         rateMatrix = new double[nrOfStates][nrOfStates];
-        relativeRates = new double[ratesInput.get().getDimension()];
-        storedRelativeRates = new double[ratesInput.get().getDimension()];
+        relativeRates = new double[ratesInput.get().size()];
+        storedRelativeRates = new double[ratesInput.get().size()];
 
     }
 
 
-    public Parameter<?> getIndicators() {
+    public BoolVectorParam getIndicators() {
         return rateIndicator;
     }
 
@@ -91,17 +91,17 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
         updateMatrix = true;
     }
 
-    private double[] probability = null;
+    private double[] probability = null; // TODO check done right?
 
     @Override
     public void setupRelativeRates() {
-        Function rates = this.ratesInput.get();
+        RealVector<PositiveReal> rates = this.ratesInput.get();
         if (this.indicatorsInput.get() != null) {
             for (int i = 0; i < relativeRates.length; i++) {
-                relativeRates[i] = rates.getArrayValue(i) * (rateIndicator.getValue(i)?1.:0.);
+                relativeRates[i] = rates.get(i) * (rateIndicator.get(i)?1.:0.);
             }
         } else for (int i = 0; i < relativeRates.length; i++) {
-            relativeRates[i] = rates.getArrayValue(i);
+            relativeRates[i] = rates.get(i);
         }
     }
 
@@ -109,12 +109,10 @@ public class ABySSubstitutionModel extends ComplexSubstitutionModel implements A
         double[][] Qm = new double[nrOfStates][nrOfStates];
         for (int i = 0; i < nrOfStates; i++) {
             Qm[i][i] = 0;
-            for (int j = 0; j < i; j++) {
-                Qm[i][j] = relativeRates[i * (nrOfStates - 1) + j];
-            }
-            for (int j = i + 1; j < nrOfStates; j++) {
-                Qm[i][j] = relativeRates[i * (nrOfStates - 1) + j - 1];
-            }
+            // TODO check array copy is right. was i * (nrOfStates - 1) + j and i * (nrOfStates - 1) + j - 1
+            System.arraycopy(relativeRates, i * (nrOfStates - 1), Qm[i], 0, i);
+            if (nrOfStates - (i + 1) >= 0)
+                System.arraycopy(relativeRates, i * (nrOfStates - 1) + i, Qm[i], i + 1, nrOfStates - (i + 1));
         }
         for (int i = 0; i < nrOfStates; i++) {
             double fSum = 0.0;
