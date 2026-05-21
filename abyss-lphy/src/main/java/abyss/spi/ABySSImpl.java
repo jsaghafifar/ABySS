@@ -1,9 +1,9 @@
 package abyss.spi;
 
+import abyss.lphy.*;
 import lphy.core.model.BasicFunction;
 import lphy.core.model.GenerativeDistribution;
 import lphy.base.spi.LPhyBaseImpl;
-import abyss.*;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,6 +1,5 @@
-package abyss;
+package abyss.lphy;
 
-import lphy.base.evolution.eigensystem.*;
 import lphy.base.evolution.substitutionmodel.RateMatrix;
 import lphy.base.evolution.substitutionmodel.SubstModelParamNames;
 import lphy.core.logger.LoggerUtils;
@@ -12,7 +11,7 @@ import lphy.core.model.datatype.DoubleArray2DValue;
 
 import java.util.Arrays;
 
-import static abyss.ComputeEquilibrium.computeEquilibrium;
+import static abyss.lphy.ComputeEquilibrium.computeEquilibrium;
 
 /**
  * Q matrix with optional nonreversibility and SVS rate indicators

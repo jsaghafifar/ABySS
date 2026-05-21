@@ -1,6 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
-import abyss.MixedAlignment;
+import abyss.lphy.MixedAlignment;
 import abyss.distributions.MixedTreeLikelihood;
 import abyss.inference.CachedTreeLikelihood;
 import abyss.logger.AlignmentModelLogger;

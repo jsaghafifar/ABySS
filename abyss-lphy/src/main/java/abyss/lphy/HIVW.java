@@ -1,4 +1,4 @@
-package abyss;
+package abyss.lphy;
 
 import lphy.base.evolution.substitutionmodel.RateMatrix;
 import lphy.core.model.Value;

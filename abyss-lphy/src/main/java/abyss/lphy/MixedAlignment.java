@@ -1,4 +1,4 @@
-package abyss;
+package abyss.lphy;
 
 import jebl.evolution.sequences.SequenceType;
 import lphy.base.evolution.alignment.Alignment;

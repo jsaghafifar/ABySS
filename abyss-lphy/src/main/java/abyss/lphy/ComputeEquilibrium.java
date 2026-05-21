@@ -1,4 +1,4 @@
-package abyss;
+package abyss.lphy;
 
 import lphy.base.evolution.eigensystem.ComplexColtEigenSystem;
 import lphy.base.evolution.eigensystem.EigenDecompositionExt;

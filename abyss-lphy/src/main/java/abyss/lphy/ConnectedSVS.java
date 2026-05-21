@@ -1,4 +1,4 @@
-package abyss;
+package abyss.lphy;
 
 import lphy.base.distribution.ParametricDistribution;
 import lphy.core.logger.LoggerUtils;

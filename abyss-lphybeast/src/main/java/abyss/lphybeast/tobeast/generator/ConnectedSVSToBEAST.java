@@ -1,6 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
-import abyss.ConnectedSVS;
+import abyss.lphy.ConnectedSVS;
 import abyss.distributions.SVSPrior;
 import beast.base.core.BEASTInterface;
 import beast.base.spec.inference.parameter.BoolVectorParam;

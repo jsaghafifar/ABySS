@@ -1,6 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
-import abyss.ClassicNQPFAM;
+import abyss.lphy.ClassicNQPFAM;
 import beast.base.core.BEASTInterface;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.BoolVectorParam;

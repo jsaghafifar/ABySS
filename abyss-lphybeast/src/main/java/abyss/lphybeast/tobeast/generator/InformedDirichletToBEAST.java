@@ -1,6 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
-import abyss.InformedDirichlet;
+import abyss.lphy.InformedDirichlet;
 import abyss.distributions.InformedDirichletPrior;
 import beast.base.core.BEASTInterface;
 import beast.base.inference.Distribution;

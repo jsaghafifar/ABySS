@@ -2,11 +2,7 @@ module abyss.lphy {
     requires transitive lphy.base;
     requires colt;
 
-    // add any req libs here
-//    requires ;
-
-    exports abyss;
-    exports abyss.spi;
+    exports abyss.lphy;
 
     // LPhy extensions
     uses lphy.core.spi.Extension;

@@ -1,6 +1,6 @@
 //package abyss.lphybeast.tobeast.generator;
 //
-//import abyss.ComputeEquilibrium;
+//import abyss.lphy.ComputeEquilibrium;
 //import beast.base.core.BEASTInterface;
 //import beast.base.core.Loggable;
 //import beast.base.inference.Distribution;

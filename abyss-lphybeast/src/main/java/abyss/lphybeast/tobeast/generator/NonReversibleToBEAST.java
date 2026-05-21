@@ -1,7 +1,7 @@
 package abyss.lphybeast.tobeast.generator;
 
-import abyss.ConnectedSVS;
-import abyss.MixedAlignment;
+import abyss.lphy.ConnectedSVS;
+import abyss.lphy.MixedAlignment;
 import abyss.distributions.EigenFriendlyQPrior;
 import abyss.distributions.SVSPrior;
 import abyss.logger.ABySSFrequencyLogger;
@@ -14,7 +14,7 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.operator.BitFlipOperator;
 import beast.base.inference.operator.kernel.Transform;
 import abyss.substitutionmodel.ABySSubstitutionModel;
-import abyss.NonReversible;
+import abyss.lphy.NonReversible;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;

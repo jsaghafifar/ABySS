@@ -2,7 +2,7 @@ package abyss.lphybeast.tobeast.generator;
 
 import abyss.substitutionmodel.ABySSubstitutionModel;
 import beast.base.core.BEASTInterface;
-import abyss.NQPFAM;
+import abyss.lphy.NQPFAM;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import lphybeast.BEASTContext;

@@ -1,6 +1,6 @@
 package abyss.lphybeast.tobeast.generator;
 
-import abyss.ClassicNonReversible;
+import abyss.lphy.ClassicNonReversible;
 import abyss.distributions.SVSPrior;
 import abyss.logger.*;
 import beast.base.core.BEASTInterface;

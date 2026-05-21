@@ -1,4 +1,4 @@
-package abyss;
+package abyss.lphy;
 
 import lphy.base.evolution.substitutionmodel.RateMatrix;
 import lphy.core.model.Value;
@@ -8,7 +8,7 @@ import lphy.core.model.annotation.GeneratorInfo;
 import lphy.core.model.annotation.ParameterInfo;
 import lphy.core.model.datatype.DoubleArray2DValue;
 
-import static abyss.ComputeEquilibrium.computeEquilibrium;
+import static abyss.lphy.ComputeEquilibrium.computeEquilibrium;
 
 /**
  * Non-reversible empirical amino acid Q matrix based on PFAM data

@@ -1,4 +1,4 @@
-package abyss;
+package abyss.lphy;
 
 import cern.colt.bitvector.BitVector;
 
