@@ -3,6 +3,7 @@ package abyss.lphybeast.tobeast.generator;
 import abyss.lphy.ClassicNQPFAM;
 import beast.base.core.BEASTInterface;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
@@ -25,7 +26,7 @@ public class ClassicNQPFAMToBEAST implements GeneratorToBEAST<ClassicNQPFAM, SVS
         SVSGeneralSubstitutionModel beastNQPFAM = new SVSGeneralSubstitutionModel();
 
         RealVectorParam<PositiveReal> ratesParameter = new RealVectorParam<>(nqpfam.getRates(), PositiveReal.INSTANCE);
-        SimplexParam freqParameter = new SimplexParam(nqpfam.getFreq());
+        Frequencies freqParameter = new Frequencies(new SimplexParam(nqpfam.getFreq()));
 
         boolean[] b = new boolean[380];
         Arrays.fill(b, true);
@@ -37,7 +38,7 @@ public class ClassicNQPFAMToBEAST implements GeneratorToBEAST<ClassicNQPFAM, SVS
         String keys = getRateKeys(states, numStates, false);
         ratesParameter.setInputValue("keys", keys);
         ratesParameter.initAndValidate();
-        freqParameter.setInputValue("keys", stateNames);
+//        freqParameter.setInputValue("keys", stateNames);
         freqParameter.initAndValidate();
 
         beastNQPFAM.setInputValue("rates", ratesParameter);

@@ -5,14 +5,14 @@ import abyss.distributions.SVSPrior;
 import abyss.logger.*;
 import beast.base.core.BEASTInterface;
 import beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator;
-import beast.base.inference.operator.kernel.Transform;
+import beast.base.spec.inference.operator.Transform;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
-import beast.base.spec.inference.parameter.SimplexParam;
+import beast.base.spec.type.Simplex;
 import beastclassic.evolution.substitutionmodel.SVSGeneralSubstitutionModel;
 import lphy.core.model.Value;
-import lphy.core.vectorization.array.DoubleArray;
 import lphybeast.BEASTContext;
 import lphybeast.GeneratorToBEAST;
 
@@ -44,8 +44,8 @@ public class ClassicNonReversibleToBEAST implements GeneratorToBEAST<ClassicNonR
         String keys = getRateKeys(states, numStates, symmetric.value());
 
         // init Q freqs
-        SimplexParam freqParameter = (SimplexParam) context.getBEASTObject(nq.getFreq());
-        freqParameter.setInputValue("keys", stateNames);
+        Frequencies freqParameter = new Frequencies((Simplex) context.getBEASTObject(nq.getFreq()));
+//        freqParameter.setInputValue("keys", stateNames);
         freqParameter.initAndValidate();
         freqParameter.setID(nq.getFreq().getId());
         beastNQ.setInputValue("frequencies", freqParameter);
@@ -73,11 +73,11 @@ public class ClassicNonReversibleToBEAST implements GeneratorToBEAST<ClassicNonR
             beastNQ.setInputValue("rateIndicator", rateIndicatorParameter);
         }
 
-        if (!(nq.getRates().getGenerator() instanceof DoubleArray)) {
-            List<Transform> rateTransforms = new ArrayList<>();
-            rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
-            addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
-        }
+//        if (nq.getRates().getGenerator() != null) {
+//            List<Transform> rateTransforms = new ArrayList<>();
+//            rateTransforms.add(addLogConstrainedSumTransform(ratesParameter));
+//            addAVMNOperator(context, rateTransforms, 10.0, ratesParameter.getID());
+//        }
 
         beastNQ.setInputValue("rates", ratesParameter);
         beastNQ.setInputValue("symmetric", symmetric.value());
@@ -89,7 +89,7 @@ public class ClassicNonReversibleToBEAST implements GeneratorToBEAST<ClassicNonR
         return beastNQ;
     }
 
-    private void addAVMNOperator(BEASTContext context, List<Transform> transforms, double weight, String id) {
+    private void addAVMNOperator(BEASTContext context, List<Transform> transforms, double weight, String id) { // TODO fix
         AdaptableVarianceMultivariateNormalOperator operator = new AdaptableVarianceMultivariateNormalOperator();
         operator.initByName("weight", weight,"coefficient", 1.0,"scaleFactor", 1.0,"beta", 0.05,
                 "initial", 1000,"burnin",500, "allowNonsense", false, "transformations", transforms);
