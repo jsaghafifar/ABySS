@@ -26,7 +26,7 @@ public class ClassicNQPFAMToBEAST implements GeneratorToBEAST<ClassicNQPFAM, SVS
         SVSGeneralSubstitutionModel beastNQPFAM = new SVSGeneralSubstitutionModel();
 
         RealVectorParam<PositiveReal> ratesParameter = new RealVectorParam<>(nqpfam.getRates(), PositiveReal.INSTANCE);
-        Frequencies freqParameter = new Frequencies(new SimplexParam(nqpfam.getFreq()));
+        SimplexParam freqSimplex = new SimplexParam(nqpfam.getFreq());
 
         boolean[] b = new boolean[380];
         Arrays.fill(b, true);
@@ -38,7 +38,9 @@ public class ClassicNQPFAMToBEAST implements GeneratorToBEAST<ClassicNQPFAM, SVS
         String keys = getRateKeys(states, numStates, false);
         ratesParameter.setInputValue("keys", keys);
         ratesParameter.initAndValidate();
-//        freqParameter.setInputValue("keys", stateNames);
+        freqSimplex.setInputValue("keys", stateNames);
+        freqSimplex.initAndValidate();
+        Frequencies freqParameter = new Frequencies(freqSimplex);
         freqParameter.initAndValidate();
 
         beastNQPFAM.setInputValue("rates", ratesParameter);
