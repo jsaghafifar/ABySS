@@ -5,12 +5,8 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.RealParameter;
-import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.*;
-import beast.base.spec.type.Simplex;
 import org.apache.commons.math4.core.jdkmath.AccurateMath;
 
 import java.util.ArrayList;
