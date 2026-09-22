@@ -1,5 +1,5 @@
 module abyss.lphy {
-    requires transitive lphy.base;
+    requires lphy.base;
     requires jdk.jfr;
     requires colt;
 

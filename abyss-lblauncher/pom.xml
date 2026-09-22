@@ -1,0 +1,59 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.jsaghafifar</groupId>
+        <artifactId>abyss-root</artifactId>
+        <version>0.0.2</version>
+    </parent>
+    <artifactId>abyss-lblauncher</artifactId>
+
+    <!-- Development composition module — produces no artifact.
+         It assembles LPhyBEAST plus the abyss extension JARs on the JPMS
+         module path so `mvn -pl abyss-lblauncher exec:exec` runs
+         LPhyBEAST with the abyss extension loaded via ServiceLoader.
+         Each dependency is declared directly so that exec-maven-plugin's
+         %classpath contains those JARs as first-class entries, independent of
+         any transitive-resolution chain through the reactor. -->
+    <dependencies>
+        <dependency>
+            <groupId>io.github.linguaphylo</groupId>
+            <artifactId>lphybeast</artifactId>
+            <version>${lphybeast.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jsaghafifar</groupId>
+            <artifactId>abyss-lphybeast</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jsaghafifar</groupId>
+            <artifactId>abyss-lphy</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jsaghafifar</groupId>
+            <artifactId>abyss-beast</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.github.4ment</groupId>-->
+<!--            <artifactId>flc</artifactId>-->
+<!--            <version>${flc.version}</version>-->
+<!--        </dependency>-->
+    </dependencies>
+
+    <build><plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <configuration>
+                <executable>java</executable>
+                <classpathScope>compile</classpathScope>
+                <!-- ALL-MODULE-PATH: every named JPMS module on the path joins
+                     the module graph automatically — ServiceLoader finds all providers -->
+                <commandlineArgs>-Dpicocli.disable.closures=true --module-path %classpath --add-modules ALL-MODULE-PATH -m lphy.beast/lphybeast.LPhyBeastMain ${lphybeast.args}</commandlineArgs>
+            </configuration>
+        </plugin>
+    </plugins></build>
+
+</project>

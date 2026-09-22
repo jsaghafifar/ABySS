@@ -5,6 +5,7 @@ open module abyss.lphybeast {
     requires beast.base;
     requires lphy.base;
     requires beast.classic;
+    requires beast.pkgmgmt;
 
     exports abyss.lphybeast.spi;
     exports abyss.lphybeast.tobeast.generator;

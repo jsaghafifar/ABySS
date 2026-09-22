@@ -11,7 +11,7 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.*;
 import beast.base.spec.type.Simplex;
-import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math4.core.jdkmath.AccurateMath;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +56,7 @@ public class SVSPrior extends Distribution {
         for (int i = 0; i < p.length; i++) {
             double x = Math.log(p.length * rates[i]);
             x *= -k; // sensitivity to empirical Q input is applied
-            p[i] = a/(a + FastMath.exp(x)); // probability of indicator scaled
+            p[i] = a/(a + AccurateMath.exp(x)); // probability of indicator scaled
             if (p[i] < 0 || p[i] > 1)
                 return Double.NEGATIVE_INFINITY;
         }

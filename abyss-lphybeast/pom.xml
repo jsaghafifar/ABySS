@@ -12,19 +12,19 @@
         <dependency>
             <groupId>io.github.linguaphylo</groupId>
             <artifactId>lphybeast</artifactId>
-            <version>${lphybeast.vision}</version>
+            <version>${lphybeast.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.jsaghafifar</groupId>
             <artifactId>abyss-beast</artifactId>
-            <version>${project.version}</version>
+            <version>0.0.2</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.jsaghafifar</groupId>
             <artifactId>abyss-lphy</artifactId>
-            <version>${project.version}</version>
+            <version>0.0.2</version>
         </dependency>
     </dependencies>
 
@@ -34,22 +34,9 @@
 
     <build>
         <plugins>
-            <!-- mvn -pl calibratedcpp-lphybeast exec:exec -Dlphybeast.args="convert examples/CPPTree.lphy" -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <configuration>
-                    <executable>java</executable>
-                    <classpathScope>compile</classpathScope>
-                    <commandlineArgs>-Dpicocli.disable.closures=true --module-path %classpath --add-modules ALL-MODULE-PATH -m lphy.beast/lphybeast.LPhyBeastMain ${lphybeast.args}</commandlineArgs>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
                 <configuration>
                     <descriptors>
                         <descriptor>src/assembly/abyss-lphybeast-assembly.xml</descriptor>

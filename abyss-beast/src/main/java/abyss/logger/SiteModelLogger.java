@@ -8,7 +8,7 @@ import beast.base.core.Loggable;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math4.core.jdkmath.AccurateMath;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public class SiteModelLogger extends BEASTObject implements Loggable {
         double max = Arrays.stream(partialLogLikelihoods).max().getAsDouble();
         double pSum = 0;
         for (int i = 0; i < partialLogLikelihoods.length; i++) {
-            posteriorOfEachModel[i] = FastMath.exp(partialLogLikelihoods[i]-max);
+            posteriorOfEachModel[i] = AccurateMath.exp(partialLogLikelihoods[i]-max);
             pSum += posteriorOfEachModel[i];
         }
         for (int i = 0; i < posteriorOfEachModel.length; i++) {

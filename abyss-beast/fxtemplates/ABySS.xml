@@ -1,0 +1,58 @@
+<beast version='2.0'
+       namespace='beastfx.app.beauti:beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+
+
+
+
+    <!-- substitution models -->
+    <mergewith point='substModelTemplates'>
+        <subtemplate id='ABySSubstitutionModel' class='abyss.substitutionmodel.ABySSubstitutionModel' mainid='ABySS.s:$(n)'>
+            <![CDATA[
+            <substModel id="ABySS.s:$(n)" spec="abyss.substitutionmodel.ABySSubstitutionModel" symmetric="false">
+                <rates id="rates.s:$(n)" spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" dimension="$(nrates)" value="1.0" estimate="true"/> <!-- TODO nrates -->
+                <frequencies id="freqs.s:$(n)" spec="beast.base.spec.evolution.substitutionmodel.Frequencies">
+                    <frequencies id="freqParameter.s:$(n)" spec="beast.base.spec.inference.parameter.SimplexParam" dimension="$(nstates)" value="1/$(nstates)"/> <!-- TODO nstates -->
+                </frequencies>
+                <rateIndicator id="indicators.s:$(n)" spec="beast.base.spec.inference.parameter.BoolVectorParam" dimension="$(nrates)" value="true" estimate="true"/> <!-- TODO nrates -->
+            </substModel>
+
+            <distribution id="ratesPrior.s:$(n)" spec="beast.base.spec.inference.distribution.Dirichlet" param="rates.s:$(n)">
+                <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" dimension="$(nrates)" estimate="false" value="1.0"/>
+            </distribution>
+
+            <distribution id="freqPrior.s:$(n)" spec="beast.base.spec.inference.distribution.Dirichlet" param="freqParameter.s:$(n)">
+                <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" dimension="$(nstates)" estimate="false" value="4.0"/>
+            </distribution>
+
+            <distribution id="indicatorPrior.s:$(n)" spec="abyss.distributions.SVSPrior" indicators="@indicators.s:$(n)" nrOfStates="$(nstates)">
+                <scale id="svsScalePrior.s:$(n)" spec="beast.base.spec.inference.distribution.Uniform">
+                    <param id="svsScale.s:$(n)" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0"/>
+                    <lower id="svsScaleLower.s:$(n)" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.1762"/>
+                    <upper id="svsScaleUpper.s:$(n)" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="2.0"/>
+                </scale>
+            </distribution>
+
+            <distribution id="eigenfriendlyRatesPrior" spec="abyss.distributions.EigenFriendlyQPrior" nrOfStates="$(nstates)" rateIndicator="@indicators.s:$(n)" rates="@rates.s:$(n)"/>
+
+            <operator id="ratesAVMN.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator" beta="0.05" burnin="500" initial="1000" weight="0.1">
+                <transformations id="ratesLogSumTrans.s:$(n)" spec="beast.base.spec.inference.operator.Transform$LogConstrainedSumTransform">
+                    <f idref="rates.s:$(n)"/>
+                </transformations>
+            </operator>
+            <operator id="ratesExchanger.s:$(n)" spec="beast.base.spec.inference.operator.DeltaExchangeOperator" delta="0.1" weight="0.1" parameter="@rates.s:$(n)"/>
+            <operator id="freqExchanger.s:$(n)" spec="beast.base.spec.inference.operator.DeltaExchangeOperator" delta="0.01" weight="0.1" parameter="@freqParameter.s:$(n)"/>
+            <operator id="indicatorBitFlipper.s:$(n)" spec="beast.base.spec.inference.operator.BitFlipOperator" parameter="@indicators.s:$(n)" uniform="false" weight="0.2"/>
+            <operator id="indicatorScaler.s:$(n)" spec="beast.base.spec.inference.operator.ScaleOperator" parameter="@svsScale.s:$(n)" upper="10.0" weight="0.1"/>
+
+]]>
+<!--            <connect srcID='CalibratedCPP.t:$(n)' targetID='prior' inputName='distribution'-->
+<!--                     if='inposterior(CalibratedCPP.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>CalibratedCPP-->
+<!--                speciation prior on tree t:$(n)-->
+<!--            </connect>-->
+
+<!--            <connect srcID='CalibratedCPP.t:$(n)' targetID='tracelog' inputName='log'-->
+<!--                     if='inposterior(CalibratedCPP.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>-->
+        </subtemplate>
+    </mergewith>
+</beast>
+

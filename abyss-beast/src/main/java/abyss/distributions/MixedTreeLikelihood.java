@@ -8,7 +8,7 @@ import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.parameter.RealVectorParam;
-import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math4.core.jdkmath.AccurateMath;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -206,7 +206,7 @@ public class MixedTreeLikelihood extends Distribution {
         double logP = 0;
         double max = Arrays.stream(p).max().getAsDouble();
         for (double v : p) {
-            logP += FastMath.exp(v - max);
+            logP += AccurateMath.exp(v - max);
         }
         logP = max + Math.log(logP);
 

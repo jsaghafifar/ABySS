@@ -1,4 +1,7 @@
-<project>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.github.jsaghafifar</groupId>
@@ -7,16 +10,24 @@
     </parent>
 
     <artifactId>abyss-beast</artifactId>
-    <version>${revision}</version>
 
     <properties>
-        <beast.version>2.8.0-beta5</beast.version>
-        <jmh.version>1.37</jmh.version>
+        <!-- the only module deploying right now - see root pom for the default -->
+        <maven.deploy.skip>false</maven.deploy.skip>
+
         <beast.module>beast.base</beast.module>
         <beast.main>beast.base.minimal.BeastMain</beast.main>
         <beast.args/>
         <beast.pkg.name>abyss</beast.pkg.name>
-        <beast.pkg.version>${revision}</beast.pkg.version>
+
+        <beastclassic.version>1.7.0-beta1</beastclassic.version>
+        <beagle.version>1.0.0</beagle.version>
+        <colt.version>1.2.0</colt.version>
+
+        <commons-math4-legacy.version>4.0-beta1</commons-math4-legacy.version>
+        <commons-math4-core.version>4.0-beta1</commons-math4-core.version>
+        <commons-statistics.version>1.2</commons-statistics.version>
+        <commons-numbers-gamma.version>1.2</commons-numbers-gamma.version>
     </properties>
 
     <dependencies>
@@ -37,12 +48,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.2</version>
@@ -51,7 +56,7 @@
         <dependency>
             <groupId>io.github.beast2-dev</groupId>
             <artifactId>beast-classic</artifactId>
-            <version>1.7.0-beta1</version>
+            <version>${beastclassic.version}</version>
             <exclusions>
                 <!-- netlib natives JARs have filenames that contain 'native',
                      a Java keyword, making them invalid as JPMS automatic
@@ -70,8 +75,42 @@
         <dependency>
             <groupId>colt</groupId>
             <artifactId>colt</artifactId>
-            <version>1.2.0</version>
+            <version>${colt.version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- pulled in transitively via beast-base, but imported directly and required in
+             module-info.java, so declared explicitly rather than relying on beast-base's
+             own transitive graph -->
+        <dependency>
+            <groupId>io.github.beagle-dev</groupId>
+            <artifactId>beagle</artifactId>
+            <version>${beagle.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-numbers-gamma</artifactId>
+            <version>${commons-numbers-gamma.version}</version>
+        </dependency>
+
+        <!-- Commons Math 4 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math4-legacy</artifactId>
+            <version>${commons-math4-legacy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math4-core</artifactId>
+            <version>${commons-math4-core.version}</version>
+        </dependency>
+
+        <!-- Commons Statistics -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-statistics-distribution</artifactId>
+            <version>${commons-statistics.version}</version>
         </dependency>
     </dependencies>
 
@@ -84,17 +123,6 @@
                 <configuration>
                     <release>25</release>
                     <encoding>UTF-8</encoding>
-                    <compilerArgs>
-                        <arg>--add-reads</arg>
-                        <arg>abyss=ALL-UNNAMED</arg>
-                    </compilerArgs>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.openjdk.jmh</groupId>
-                            <artifactId>jmh-generator-annprocess</artifactId>
-                            <version>${jmh.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
@@ -102,16 +130,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
-                <configuration>
-                    <argLine>
-                        --add-reads abyss=ALL-UNNAMED
-                        --add-reads beast.base=ALL-UNNAMED
-                        --add-reads beast.pkgmgmt=ALL-UNNAMED
-                    </argLine>
-                    <systemPropertyVariables>
-                        <BEAST_PACKAGE_PATH>${project.build.outputDirectory}</BEAST_PACKAGE_PATH>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
             <!-- Copy version.xml to target/ (for ZIP assembly) and target/classes/
                  (embeds it in the JAR and makes it visible to BEAST_PACKAGE_PATH) -->
@@ -157,7 +175,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
                 <configuration>
                     <executable>java</executable>
                     <workingDirectory>${project.basedir}</workingDirectory>
@@ -192,7 +209,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
                 <configuration>
                     <descriptors>
                         <descriptor>src/assembly/abyss-beast-assembly.xml</descriptor>

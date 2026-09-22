@@ -1,10 +1,14 @@
 open module abyss.beast {
     requires beast.pkgmgmt;
     requires beast.base;
-    requires beast.fx;
+
+    requires beagle;
+//    requires beast.fx;
     requires colt;
-    requires commons.math3;
+//    requires commons.math3;
     requires beast.classic;
+    requires org.apache.commons.math4.core;
+    requires org.apache.commons.math4.legacy;
     requires org.apache.commons.numbers.gamma;
     requires org.apache.commons.statistics.distribution;
     requires jdk.jfr;
