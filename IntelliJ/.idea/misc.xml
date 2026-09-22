@@ -8,6 +8,20 @@
         <option value="$PROJECT_DIR$/abyss-lphy-studio/pom.xml" />
       </list>
     </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-flc/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-launcher/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-mascot/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-mc3/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-mm/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-orc/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-sa/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast-ssm/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/lphybeast/pom.xml" />
+        <option value="$PROJECT_DIR$/../LPhyBeast/pom.xml" />
+      </set>
+    </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_25" project-jdk-name="25" project-jdk-type="JavaSDK" />
 </project>

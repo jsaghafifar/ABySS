@@ -3,6 +3,8 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/abyss-beast/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/abyss-beast/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/abyss-lblauncher/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/abyss-lblauncher/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/abyss-lphy/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/abyss-lphy/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/abyss-lphybeast/src/main/java" charset="UTF-8" />
@@ -11,31 +13,21 @@
     <file url="file://$PROJECT_DIR$/abyss-studio/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-bdtree/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-bdtree/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-ext-dist/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-ext-dist/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-feast/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-feast/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-flc/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-flc/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-launcher/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-launcher/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-ma/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-ma/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-mascot/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-mascot/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-mc3/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-mc3/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-mm/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-mm/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-orc/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-orc/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-sa/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-sa/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-ssm/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast-ssm/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/lphybeast/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../LPhyBeast/src/main/resources" charset="UTF-8" />
