@@ -15,6 +15,29 @@
             <version>${lphybeast.version}</version>
         </dependency>
 
+        <!-- LPhy, BEAST and beast-classic at ABySS's versions (lphy.version, beast.version, beastclassic.version),
+             declared here so that they are used instead of the older versions lphybeast was released with -->
+        <dependency>
+            <groupId>io.github.linguaphylo</groupId>
+            <artifactId>lphy-base</artifactId>
+            <version>${lphy.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.beast2-dev</groupId>
+            <artifactId>beast-classic</artifactId>
+            <version>${beastclassic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.compevol</groupId>
+            <artifactId>beast-base</artifactId>
+            <version>${beast.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.compevol</groupId>
+            <artifactId>beast-pkgmgmt</artifactId>
+            <version>${beast.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>io.github.jsaghafifar</groupId>
             <artifactId>abyss-beast</artifactId>

@@ -1,0 +1,42 @@
+// Two discrete traits on one tree, each with its own ABySS non-reversible rate matrix.
+// Example: a virus sampled across regions and host species. Every tip has two observed label: region and host
+// both evolve along the same genealogy (estimated from the sequences), independently given the tree
+// each with its own directional rates and its own clock:
+//   - region: 5 states, 20 directed routes, with stochastic variable selection (ConnectedSVS keeps the route graph
+//     strongly connected, so the transition probabilities are valid)
+//   - host:   3 states, all 6 directed host jumps
+// Not for one trait whose rates change over time (e.g. seasons): that is one trait with switching matrices
+// (EpochPhyloCTMC), since a tip has only one location.
+// If changes in the two traits are linked (a host jump usually comes with a move), use one trait over the combined
+// states (region x host) instead.
+// Needs abyss-lphy (nonReversible, ConnectedSVS); convert with LPhyBEAST.
+data {
+  L = 1000;                          // alignment length
+  K_region = 5;
+  K_host = 3;
+}
+model {
+  // ---- tree from the sequences
+  // Θ about 1: tree height about 2, tree length about 10 (in the time units of the clocks below)
+  Θ ~ LogNormal(meanlog=0.0, sdlog=0.3);
+  ψ ~ Coalescent(theta=Θ, n=100);
+  κ ~ LogNormal(meanlog=1.0, sdlog=0.5);
+  π ~ Dirichlet(conc=[2.0, 2.0, 2.0, 2.0]);
+  D ~ PhyloCTMC(L=L, Q=hky(kappa=κ, freq=π), mu=0.02, tree=ψ);
+
+  // ---- region: non-reversible with route selection
+  // conc 5, not 1: with conc 1 some rates are near 0 and, with routes off, the equilibrium piles up in one region
+  // (up to 97%), so nearly all tips share one state
+  R_region ~ Dirichlet(conc=rep(element=5.0, times=K_region*(K_region-1)));
+  svsScale ~ Uniform(lower=0.1762, upper=2.0);
+  I_region ~ ConnectedSVS(states=K_region, scale=svsScale, symmetric=false);
+  Q_region = nonReversible(rates=R_region, indicators=I_region);
+  μ_region ~ LogNormal(meanlog=1.0, sdlog=0.3);   // about 2.7 changes per unit time: about 25 along the tree
+  region ~ PhyloCTMC(L=1, Q=Q_region, mu=μ_region, tree=ψ, dataType=standard(numStates=K_region));
+
+  // ---- host: non-reversible, every jump allowed, its own (usually slower) clock
+  R_host ~ Dirichlet(conc=rep(element=5.0, times=K_host*(K_host-1)));
+  Q_host = nonReversible(rates=R_host);
+  μ_host ~ LogNormal(meanlog=0.3, sdlog=0.3);     // about 1.4 per unit time: about 12 host jumps along the tree
+  host ~ PhyloCTMC(L=1, Q=Q_host, mu=μ_host, tree=ψ, dataType=standard(numStates=K_host));
+}

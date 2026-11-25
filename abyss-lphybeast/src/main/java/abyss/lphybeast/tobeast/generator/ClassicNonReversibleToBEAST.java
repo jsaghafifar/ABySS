@@ -85,7 +85,7 @@ public class ClassicNonReversibleToBEAST implements GeneratorToBEAST<ClassicNonR
         beastNQ.initAndValidate();
         beastNQ.setID(value.getID());
         if (!symmetric.value()) addFreqLogger(context, beastNQ, stateNames, value.getID());
-        addNonRevLoggers(context, beastNQ, getRateKeys(states, numStates, true), stateNames, numStates);
+        addNonRevLoggers(context, beastNQ, getRateKeys(states, numStates, true), stateNames, numStates, value.getID());
 
         return beastNQ;
     }
@@ -117,16 +117,18 @@ public class ClassicNonReversibleToBEAST implements GeneratorToBEAST<ClassicNonR
         context.addExtraLoggable(frequencyLogger);
     }
 
-    private void addNonRevLoggers(BEASTContext context, SVSGeneralSubstitutionModel model, String keys, String states, Integer numStates) {
+    /** loggers of how far the matrix is from detailed balance (and, for 4 states, its net fluxes); the IDs start
+     *  with the model's ID so that several non-reversible matrices in one analysis get their own loggers */
+    private void addNonRevLoggers(BEASTContext context, SVSGeneralSubstitutionModel model, String keys, String states, Integer numStates, String id) {
         ClassicDetailedBalanceLogger balancesLogger = new ClassicDetailedBalanceLogger();
         balancesLogger.setInputValue("model", model);
         balancesLogger.setInputValue("keys", keys);
         balancesLogger.initAndValidate();
-        balancesLogger.setID("balances");
+        balancesLogger.setID(id + ".balances");
         RootMeanSquareLogger balanceLogger = new RootMeanSquareLogger();
         balanceLogger.setInputValue("logger", balancesLogger);
         balanceLogger.initAndValidate();
-        balanceLogger.setID("balance");
+        balanceLogger.setID(id + ".balance");
 
         context.addExtraLoggable(balancesLogger);
         context.addExtraLoggable(balanceLogger);
@@ -136,11 +138,11 @@ public class ClassicNonReversibleToBEAST implements GeneratorToBEAST<ClassicNonR
             fluxesLogger.setInputValue("model", model);
             fluxesLogger.setInputValue("states", states);
             fluxesLogger.initAndValidate();
-            fluxesLogger.setID("fluxes");
+            fluxesLogger.setID(id + ".fluxes");
             RootMeanSquareLogger fluxLogger = new RootMeanSquareLogger();
-            fluxLogger.setInputValue("logger", balancesLogger);
+            fluxLogger.setInputValue("logger", fluxesLogger);
             fluxLogger.initAndValidate();
-            fluxLogger.setID("flux");
+            fluxLogger.setID(id + ".flux");
 
             context.addExtraLoggable(fluxesLogger);
             context.addExtraLoggable(fluxLogger);
