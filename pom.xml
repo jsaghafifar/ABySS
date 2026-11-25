@@ -45,6 +45,7 @@
         <!-- latest releases on Maven Central -->
         <lphy.version>1.8.0</lphy.version>
         <lphybeast.version>1.4.0-beta2</lphybeast.version>
+        <beastclassic.version>1.7.1</beastclassic.version>
         <revision>0.0.2</revision>
 
         <!-- shared third-party dependency/plugin versions -->
